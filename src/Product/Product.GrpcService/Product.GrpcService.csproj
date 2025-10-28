@@ -8,12 +8,17 @@
 
     <ItemGroup>
         <PackageReference Include="Grpc.AspNetCore" Version="2.64.0" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.10">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\..\..\OrderSystem.ServiceDefaults\OrderSystem.ServiceDefaults.csproj" />
       <ProjectReference Include="..\..\Shared\Shared.Proto\Shared.Proto.csproj" />
       <ProjectReference Include="..\..\Shared\Shared.GrpcInfrastructure\Shared.GrpcInfrastructure.csproj" />
+      <ProjectReference Include="..\Product.Infrastructure\Product.Infrastructure.csproj" />
     </ItemGroup>
 
     <ItemGroup>

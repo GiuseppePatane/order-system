@@ -1,12 +1,16 @@
 using Product.GrpcService.Services;
+using Product.Infrastructure.Extensions;
 using Shared.GrpcInfrastructure.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
-// Add services to the container with error handling interceptor
+
 builder.Services.AddGrpcWithErrorHandling();
+
+
+builder.Services.AddProductInfrastructure(builder.Configuration);
 
 var app = builder.Build();
 

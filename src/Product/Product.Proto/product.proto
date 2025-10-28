@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 import "common.proto";
+import "google/protobuf/timestamp.proto";
 
 option csharp_namespace = "Products";
 
@@ -10,12 +11,39 @@ package products;
 service ProductService {
   // Retrieves a product by its ID
   rpc GetProduct (GetProductRequest) returns (ProductResponse);
+
+  // Retrieves a paginated list of products
+  rpc GetProducts (GetProductsRequest) returns (GetProductsResponse);
+
+  // Creates a new product
+  rpc CreateProduct (CreateProductRequest) returns (ProductResponse);
+
+  // Updates an existing product
+  rpc UpdateProduct (UpdateProductRequest) returns (ProductResponse);
+
+  // Deletes a product by its ID
+  rpc DeleteProduct (DeleteProductRequest) returns (DeleteProductResponse);
+
+  // Updates product stock
+  rpc UpdateStock (UpdateStockRequest) returns (ProductResponse);
+
+  // Activates a product
+  rpc ActivateProduct (ActivateProductRequest) returns (ProductResponse);
+
+  // Deactivates a product
+  rpc DeactivateProduct (DeactivateProductRequest) returns (ProductResponse);
+
+  // Checks product availability
+  rpc CheckAvailability (CheckAvailabilityRequest) returns (CheckAvailabilityResponse);
 }
+
+// ========== Get Product by ID ==========
 
 // The request message containing the product ID.
 message GetProductRequest {
   string product_id = 1;
 }
+
 // The response message containing the product details or an error.
 message ProductResponse {
   oneof result {
@@ -24,10 +52,136 @@ message ProductResponse {
   }
 }
 
+// ========== Get Products (Paginated) ==========
+
+// Request for paginated product list
+message GetProductsRequest {
+  int32 page_number = 1;  // Page number (starts from 1)
+  int32 page_size = 2;    // Number of items per page
+  optional string category_id = 3;  // Optional filter by category
+  optional bool is_active = 4;      // Optional filter by active status
+  optional string search_term = 5;  // Optional search in name/description
+}
+
+// Response containing paginated products
+message GetProductsResponse {
+  oneof result {
+    ProductListData data = 1;
+    shared.ErrorResponse error = 2;
+  }
+}
+
+// Paginated product list data
+message ProductListData {
+  repeated ProductData items = 1;
+  int32 page_number = 2;
+  int32 page_size = 3;
+  int32 total_count = 4;
+  int32 total_pages = 5;
+  bool has_previous_page = 6;
+  bool has_next_page = 7;
+}
+
+// ========== Create Product ==========
+
+// Request to create a new product
+message CreateProductRequest {
+  string name = 1;
+  string description = 2;
+  double price = 3;
+  int32 stock = 4;
+  string sku = 5;
+  string category_id = 6;
+}
+
+// ========== Update Product ==========
+
+// Request to update a product
+message UpdateProductRequest {
+  string product_id = 1;
+  optional string name = 2;
+  optional string description = 3;
+  optional double price = 4;
+  optional string sku = 5;
+  optional string category_id = 6;
+}
+
+// ========== Delete Product ==========
+
+// Request to delete a product
+message DeleteProductRequest {
+  string product_id = 1;
+}
+
+// Response for delete operation
+message DeleteProductResponse {
+  oneof result {
+    DeleteProductData data = 1;
+    shared.ErrorResponse error = 2;
+  }
+}
+
+// Delete confirmation data
+message DeleteProductData {
+  bool success = 1;
+  string product_id = 2;
+}
+
+// ========== Update Stock ==========
+
+// Request to update product stock
+message UpdateStockRequest {
+  string product_id = 1;
+  int32 quantity = 2;  // Positive to add, negative to reduce
+}
+
+// ========== Activate/Deactivate Product ==========
+
+// Request to activate a product
+message ActivateProductRequest {
+  string product_id = 1;
+}
+
+// Request to deactivate a product
+message DeactivateProductRequest {
+  string product_id = 1;
+}
+
+// ========== Check Availability ==========
+
+// Request to check product availability
+message CheckAvailabilityRequest {
+  string product_id = 1;
+  int32 quantity = 2;
+}
+
+// Response for availability check
+message CheckAvailabilityResponse {
+  oneof result {
+    AvailabilityData data = 1;
+    shared.ErrorResponse error = 2;
+  }
+}
+
+// Availability check data
+message AvailabilityData {
+  bool is_available = 1;
+  int32 available_quantity = 2;
+  int32 requested_quantity = 3;
+}
+
+// ========== Product Data Model ==========
+
 // Product data
 message ProductData {
   string product_id = 1;
   string name = 2;
   string description = 3;
   double price = 4;
+  int32 stock = 5;
+  string sku = 6;
+  string category_id = 7;
+  bool is_active = 8;
+  google.protobuf.Timestamp created_at = 9;
+  optional google.protobuf.Timestamp updated_at = 10;
 }

@@ -1,3 +1,5 @@
+using Grpc.Core;
+using Product.Core.Repositories;
 using Products;
 using Shared.GrpcInfrastructure.Base;
 
@@ -6,55 +8,62 @@ namespace Product.GrpcService.Services;
 public class ProductGrpcService : ProductService.ProductServiceBase
 {
     private readonly ILogger<ProductGrpcService> _logger;
+    private readonly IProductRepository _productRepository;
     private readonly GrpcServiceBase<ProductGrpcService> _baseService;
 
-    public ProductGrpcService(ILogger<ProductGrpcService> logger)
+    public ProductGrpcService(ILogger<ProductGrpcService> logger, IProductRepository productRepository)
     {
         _logger = logger;
+        _productRepository = productRepository;
         _baseService = new InternalGrpcServiceBase(logger);
     }
 
-    public override Task<ProductResponse> GetProduct(GetProductRequest request, Grpc.Core.ServerCallContext context)
+
+    public override Task<ProductResponse> CreateProduct(CreateProductRequest request, ServerCallContext context)
+    {
+      
+        
+    }
+
+
+    public override async Task<ProductResponse> GetProduct(GetProductRequest request, Grpc.Core.ServerCallContext context)
     {
         try
         {
-            if (!_baseService.IsValidString(request.ProductId))
+            if (!_baseService.IsValidGuid(request.ProductId, out var  productId))
             {
-                return Task.FromResult(new ProductResponse
+                return new ProductResponse
                 {
                     Error = _baseService.CreateInvalidArgumentError("ProductId", "cannot be empty")
-                });
+                };
             }
-
-            // Simulazione: prodotto non trovato
-            if (request.ProductId == "999")
+            
+            var product =await  _productRepository.GetByIdAsync(productId, context.CancellationToken);
+            if (product == null)
             {
-                return Task.FromResult(new ProductResponse
+                return new ProductResponse
                 {
                     Error = _baseService.CreateNotFoundError("Product", request.ProductId)
-                });
+                };
             }
-
-            // Successo
-            return Task.FromResult(new ProductResponse
+            return new ProductResponse
             {
                 Data = new ProductData
                 {
-                    ProductId = request.ProductId,
-                    Name = "Sample Product",
-                    Description = "This is a sample product description.",
-                    Price = 19.99
+                    ProductId = product.Id.ToString(),
+                    Name = product.Name,
+                    Description = product.Description
                 }
-            });
+            };
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unexpected error in GetProduct for ProductId: {ProductId}", request.ProductId);
 
-            return Task.FromResult(new ProductResponse
+            return new ProductResponse
             {
                 Error = _baseService.CreateInternalError()
-            });
+            };
         }
     }
 
