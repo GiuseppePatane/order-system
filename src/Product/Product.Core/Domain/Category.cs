@@ -3,9 +3,7 @@ using Shared.Core.Domain.Results;
 
 namespace Product.Core.Domain;
 
-/// <summary>
-/// Entità di dominio che rappresenta una categoria di prodotti
-/// </summary>
+
 public class Category
 {
     public Guid Id { get; private set; }
@@ -42,7 +40,7 @@ public class Category
     /// </summary>
     public static Result<Category> Create(string name, string description)
     {
-        // Validazione
+    
         if (string.IsNullOrWhiteSpace(name))
             return Result<Category>.Failure(new ValidationError(nameof(Name), "Name cannot be empty"));
 
