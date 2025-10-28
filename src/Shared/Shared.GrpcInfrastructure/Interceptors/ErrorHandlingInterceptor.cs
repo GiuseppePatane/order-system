@@ -28,7 +28,7 @@ public class ErrorHandlingInterceptor : Interceptor
         }
         catch (RpcException)
         {
-            // Re-throw RpcExceptions as they are already properly formatted
+            
             throw;
         }
         catch (ArgumentException ex)

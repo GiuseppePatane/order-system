@@ -23,7 +23,7 @@ public static class ServiceCollectionExtensions
         services.AddDbContext<ProductDbContext>(options =>
         {
             options.UseNpgsql(
-                configuration.GetConnectionString("ProductionDatabase"),
+                configuration.GetConnectionString("productdb"),
                 npgsqlOptions =>
                 {
                     npgsqlOptions.EnableRetryOnFailure(

@@ -37,14 +37,7 @@ public class ProductsController : ControllerBase
         return MapErrorToProblemDetails(result.Error!);
     }
 
-    /*
-     Create a new product
 
-     curl example:
-     curl -X POST http://localhost:5000/api/products \
-       -H "Content-Type: application/json" \
-       -d '{"name":"My product","description":"desc","price":9.99,"stock":10,"sku":"SKU123","categoryId":"<guid>"}'
-    */
     [HttpPost]
     [ProducesResponseType(typeof(ProductDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -60,12 +53,7 @@ public class ProductsController : ControllerBase
         return MapErrorToProblemDetails(result.Error!);
     }
 
-    /*
-     Get paginated products
 
-     curl example:
-     curl "http://localhost:5000/api/products?pageNumber=1&pageSize=10&categoryId=<guid>&searchTerm=foo"
-    */
     [HttpGet]
     [ProducesResponseType(typeof(PagedProductsDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
@@ -87,14 +75,7 @@ public class ProductsController : ControllerBase
         return MapErrorToProblemDetails(result.Error!);
     }
 
-    /*
-     Update a product
-
-     curl example:
-     curl -X PUT http://localhost:5000/api/products/{id} \
-       -H "Content-Type: application/json" \
-       -d '{"name":"Updated","price":12.5}'
-    */
+   
     [HttpPut("{id}")]
     [ProducesResponseType(typeof(ProductDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -109,13 +90,7 @@ public class ProductsController : ControllerBase
 
         return MapErrorToProblemDetails(result.Error!);
     }
-
-    /*
-     Delete a product
-
-     curl example:
-     curl -X DELETE http://localhost:5000/api/products/{id}
-    */
+    
     [HttpDelete("{id}")]
     [ProducesResponseType(typeof(void), StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]

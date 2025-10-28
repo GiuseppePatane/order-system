@@ -81,6 +81,11 @@ public abstract class GrpcServiceBase<T> where T : class
     
     public bool IsValidGuid(string? value, out Guid guid)
     {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            guid = Guid.Empty;
+            return false;
+        }
         return Guid.TryParse(value, out guid);
     }
 }

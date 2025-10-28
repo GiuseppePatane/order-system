@@ -14,10 +14,14 @@
     <ItemGroup>
         <PackageReference Include="Aspire.Hosting.AppHost" Version="9.5.2"/>
         <PackageReference Include="Aspire.Hosting.Docker" Version="9.5.2-preview.1.25378.10"/>
+        <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="9.5.2" />
+        <PackageReference Include="Aspire.Npgsql" Version="9.5.2" />
+        <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.5.2" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\src\ApiGateway\ApiGateway.Api\ApiGateway.Api.csproj" />
+      <ProjectReference Include="..\src\Product\Product.DataMigrator\Product.DataMigrator.csproj" />
       <ProjectReference Include="..\src\Product\Product.GrpcService\Product.GrpcService.csproj" />
     </ItemGroup>
 
