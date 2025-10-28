@@ -3,10 +3,10 @@ using Product.Core.Domain;
 
 namespace Product.Infrastructure.EF;
 
-public class ProductionDbContext : DbContext
+public class ProductDbContext : DbContext
 {
     
-    public ProductionDbContext(DbContextOptions<ProductionDbContext> options)
+    public ProductDbContext(DbContextOptions<ProductDbContext> options)
         : base(options)
     {
     }
@@ -16,7 +16,7 @@ public class ProductionDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ProductionDbContext).Assembly);
+         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ProductDbContext).Assembly);
         
         base.OnModelCreating(modelBuilder);
     }

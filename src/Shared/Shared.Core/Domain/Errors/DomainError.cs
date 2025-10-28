@@ -24,3 +24,8 @@ public record NotFoundError(string EntityType, string EntityId)
 public record DuplicateError(string EntityType, string Field, string Value)
     : DomainError("DUPLICATE", $"{EntityType} with {Field} '{Value}' already exists");
 
+/// <summary>
+/// Error for persistence / infrastructure failures
+/// </summary>
+public record PersistenceError(string Message)
+    : DomainError("PERSISTENCE_ERROR", Message);

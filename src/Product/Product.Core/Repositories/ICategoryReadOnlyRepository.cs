@@ -6,17 +6,17 @@ namespace Product.Core.Repositories;
 /// <summary>
 /// Repository interface for Category aggregate root operations
 /// </summary>
-public interface ICategoryRepository
+public interface ICategoryReadOnlyRepository
 {
     /// <summary>
     /// Gets a category by its ID
     /// </summary>
-    Task<Category?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<Result<Category>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets a category by its name
     /// </summary>
-    Task<Category?> GetByNameAsync(string name, CancellationToken cancellationToken = default);
+    Task<Result<Category>> GetByNameAsync(string name, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets all active categories
@@ -46,24 +46,4 @@ public interface ICategoryRepository
     /// Checks if a category name is already in use
     /// </summary>
     Task<bool> NameExistsAsync(string name, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Adds a new category
-    /// </summary>
-    Task AddAsync(Category category, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Updates an existing category
-    /// </summary>
-    void Update(Category category);
-
-    /// <summary>
-    /// Removes a category
-    /// </summary>
-    void Remove(Category category);
-
-    /// <summary>
-    /// Saves all changes to the database
-    /// </summary>
-    Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

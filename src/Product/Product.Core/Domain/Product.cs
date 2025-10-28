@@ -140,6 +140,68 @@ public class Product
     }
 
     /// <summary>
+    /// Aggiorna il nome del prodotto
+    /// </summary>
+    public Result UpdateName(string newName)
+    {
+        if (string.IsNullOrWhiteSpace(newName))
+            return Result.Failure(new ValidationError(nameof(Name), "Name cannot be empty"));
+
+        Name = newName;
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Ok();
+    }
+
+    /// <summary>
+    /// Aggiorna la descrizione del prodotto
+    /// </summary>
+    public Result UpdateDescription(string newDescription)
+    {
+        Description = newDescription ?? string.Empty;
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Ok();
+    }
+
+    /// <summary>
+    /// Aggiorna lo SKU del prodotto
+    /// </summary>
+    public Result UpdateSku(string newSku)
+    {
+        if (string.IsNullOrWhiteSpace(newSku))
+            return Result.Failure(new ValidationError(nameof(Sku), "SKU cannot be empty"));
+
+        Sku = newSku;
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Ok();
+    }
+
+    /// <summary>
+    /// Cambia la categoria del prodotto
+    /// </summary>
+    public Result ChangeCategory(Guid newCategoryId)
+    {
+        if (newCategoryId == Guid.Empty)
+            return Result.Failure(new ValidationError(nameof(CategoryId), "CategoryId cannot be empty"));
+
+        CategoryId = newCategoryId;
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Ok();
+    }
+
+    /// <summary>
+    /// Imposta lo stock assoluto del prodotto
+    /// </summary>
+    public Result SetStock(int newStock)
+    {
+        if (newStock < 0)
+            return Result.Failure(new ValidationError(nameof(Stock), "Stock cannot be negative"));
+
+        Stock = newStock;
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Ok();
+    }
+
+    /// <summary>
     /// Disattiva il prodotto
     /// </summary>
     public void Deactivate()

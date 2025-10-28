@@ -11,7 +11,7 @@ using Product.Infrastructure.EF;
 
 namespace Product.Infrastructure.EF.Migrations
 {
-    [DbContext(typeof(ProductionDbContext))]
+    [DbContext(typeof(ProductDbContext))]
     [Migration("20251028084240_Initial")]
     partial class Initial
     {

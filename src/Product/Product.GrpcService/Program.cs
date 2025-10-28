@@ -1,3 +1,4 @@
+using Product.Application.Extensions;
 using Product.GrpcService.Services;
 using Product.Infrastructure.Extensions;
 using Shared.GrpcInfrastructure.Extensions;
@@ -11,6 +12,7 @@ builder.Services.AddGrpcWithErrorHandling();
 
 
 builder.Services.AddProductInfrastructure(builder.Configuration);
+builder.Services.AddProductApplication();
 
 var app = builder.Build();
 

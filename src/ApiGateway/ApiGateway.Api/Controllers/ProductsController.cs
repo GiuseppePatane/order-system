@@ -2,7 +2,7 @@ using ApiGateway.Core.Common;
 using ApiGateway.Core.Product;
 using Microsoft.AspNetCore.Mvc;
 
-namespace OrderSystem.ApiGateway.Controllers;
+namespace ApiGateway.Api.Controllers;
 
 [ApiController]
 [Route("api/products")]
@@ -37,6 +37,98 @@ public class ProductsController : ControllerBase
         return MapErrorToProblemDetails(result.Error!);
     }
 
+    /*
+     Create a new product
+
+     curl example:
+     curl -X POST http://localhost:5000/api/products \
+       -H "Content-Type: application/json" \
+       -d '{"name":"My product","description":"desc","price":9.99,"stock":10,"sku":"SKU123","categoryId":"<guid>"}'
+    */
+    [HttpPost]
+    [ProducesResponseType(typeof(ProductDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> CreateProduct([FromBody] CreateProductRequestDto request)
+    {
+        var result = await _productServiceClient.CreateProduct(request);
+        if (result.IsSuccess && result.Data != null)
+        {
+            return CreatedAtAction(nameof(GetProduct), new { id = result.Data.ProductId }, result.Data);
+        }
+
+        return MapErrorToProblemDetails(result.Error!);
+    }
+
+    /*
+     Get paginated products
+
+     curl example:
+     curl "http://localhost:5000/api/products?pageNumber=1&pageSize=10&categoryId=<guid>&searchTerm=foo"
+    */
+    [HttpGet]
+    [ProducesResponseType(typeof(PagedProductsDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> GetProducts([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, [FromQuery] string? categoryId = null, [FromQuery] string? searchTerm = null, [FromQuery] bool? isActive = null)
+    {
+        var request = new GetProductsRequestDto
+        {
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+            CategoryId = categoryId,
+            IsActive = isActive,
+            SearchTerm = searchTerm
+        };
+
+        var result = await _productServiceClient.GetProducts(request);
+        if (result.IsSuccess && result.Data != null)
+            return Ok(result.Data);
+
+        return MapErrorToProblemDetails(result.Error!);
+    }
+
+    /*
+     Update a product
+
+     curl example:
+     curl -X PUT http://localhost:5000/api/products/{id} \
+       -H "Content-Type: application/json" \
+       -d '{"name":"Updated","price":12.5}'
+    */
+    [HttpPut("{id}")]
+    [ProducesResponseType(typeof(ProductDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> UpdateProduct(string id, [FromBody] UpdateProductRequestDto request)
+    {
+        request = request with { ProductId = id };
+        var result = await _productServiceClient.UpdateProduct(request);
+        if (result.IsSuccess && result.Data != null)
+            return Ok(result.Data);
+
+        return MapErrorToProblemDetails(result.Error!);
+    }
+
+    /*
+     Delete a product
+
+     curl example:
+     curl -X DELETE http://localhost:5000/api/products/{id}
+    */
+    [HttpDelete("{id}")]
+    [ProducesResponseType(typeof(void), StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> DeleteProduct(string id)
+    {
+        var result = await _productServiceClient.DeleteProduct(id);
+        if (result.IsSuccess && result.Data != null && result.Data.Success)
+            return NoContent();
+
+        return MapErrorToProblemDetails(result.Error!);
+    }
+
     private IActionResult MapErrorToProblemDetails(ErrorInfo error)
     {
         var problemDetails = new ProblemDetails
@@ -50,8 +142,7 @@ public class ProductsController : ControllerBase
         {
             problemDetails.Extensions["additionalDetails"] = error.Details;
         }
-
-        // Mappa i codici errore gRPC agli status code HTTP appropriati
+        
         var (statusCode, type) = error.Code switch
         {
             "PRODUCT_NOT_FOUND" => (StatusCodes.Status404NotFound, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.4"),

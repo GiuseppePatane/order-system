@@ -18,6 +18,7 @@
       <ProjectReference Include="..\..\..\OrderSystem.ServiceDefaults\OrderSystem.ServiceDefaults.csproj" />
       <ProjectReference Include="..\..\Shared\Shared.Proto\Shared.Proto.csproj" />
       <ProjectReference Include="..\..\Shared\Shared.GrpcInfrastructure\Shared.GrpcInfrastructure.csproj" />
+      <ProjectReference Include="..\Product.Application\Product.Application.csproj" />
       <ProjectReference Include="..\Product.Infrastructure\Product.Infrastructure.csproj" />
     </ItemGroup>
 

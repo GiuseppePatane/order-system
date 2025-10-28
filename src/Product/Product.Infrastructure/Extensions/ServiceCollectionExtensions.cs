@@ -20,7 +20,7 @@ public static class ServiceCollectionExtensions
         IConfiguration configuration)
     {
         // Register DbContext
-        services.AddDbContext<ProductionDbContext>(options =>
+        services.AddDbContext<ProductDbContext>(options =>
         {
             options.UseNpgsql(
                 configuration.GetConnectionString("ProductionDatabase"),
@@ -44,8 +44,12 @@ public static class ServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddProductRepositories(this IServiceCollection services)
     {
-        services.AddScoped<IProductRepository, ProductRepository>();
+        // Prefer the split implementations
+        services.AddScoped<IProductReadOnlyRepository, ProductReadOnlyRepository>();
+        services.AddScoped<IProductWriteRepository, ProductWriteRepository>();
+
+        services.AddScoped<ICategoryReadOnlyRepository, CategoryReadOnlyRepository>();
         
-        return services;
-    }
-}
+         return services;
+     }
+ }

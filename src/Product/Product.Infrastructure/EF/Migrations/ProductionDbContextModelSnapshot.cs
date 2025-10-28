@@ -10,7 +10,7 @@ using Product.Infrastructure.EF;
 
 namespace Product.Infrastructure.EF.Migrations
 {
-    [DbContext(typeof(ProductionDbContext))]
+    [DbContext(typeof(ProductDbContext))]
     partial class ProductionDbContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
