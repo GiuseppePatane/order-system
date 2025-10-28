@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+import "common.proto";
+
+option csharp_namespace = "Products";
+
+package products;
+
+// The product service definition.
+service ProductService {
+  // Retrieves a product by its ID
+  rpc GetProduct (GetProductRequest) returns (ProductResponse);
+}
+
+// The request message containing the product ID.
+message GetProductRequest {
+  string product_id = 1;
+}
+// The response message containing the product details or an error.
+message ProductResponse {
+  oneof result {
+    ProductData data = 1;
+    shared.ErrorResponse error = 2;
+  }
+}
+
+// Product data
+message ProductData {
+  string product_id = 1;
+  string name = 2;
+  string description = 3;
+  double price = 4;
+}

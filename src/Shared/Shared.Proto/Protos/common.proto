@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+option csharp_namespace = "Shared.Contracts";
+
+package shared;
+
+// Common error response that can be used across all services
+message ErrorResponse {
+  string code = 1;
+  string message = 2;
+  map<string, string> details = 3;
+}
+
+// Generic result wrapper that can be used with any data type
+// Usage example in your service proto:
+//   import "common.proto";
+//
+//   message YourResponse {
+//     oneof result {
+//       YourData data = 1;
+//       shared.ErrorResponse error = 2;
+//     }
+//   }

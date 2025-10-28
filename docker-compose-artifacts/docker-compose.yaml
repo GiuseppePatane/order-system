@@ -1,0 +1,45 @@
+services:
+  production-system-dashboard:
+    image: "mcr.microsoft.com/dotnet/nightly/aspire-dashboard:latest"
+    ports:
+      - "18888:18888"
+      - "18889:18889"
+    networks:
+      - "aspire"
+    restart: "always"
+  product-grpcservice:
+    image: "${PRODUCT_GRPCSERVICE_IMAGE}"
+    environment:
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES: "true"
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES: "true"
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_RETRY: "in_memory"
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+      HTTP_PORTS: "${PRODUCT_GRPCSERVICE_PORT}"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://production-system-dashboard:18889"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
+      OTEL_SERVICE_NAME: "product-grpcservice"
+    ports:
+      - "5000:${PRODUCT_GRPCSERVICE_PORT}"
+    networks:
+      - "aspire"
+  apigateway-api:
+    image: "${APIGATEWAY_API_IMAGE}"
+    environment:
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES: "true"
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES: "true"
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_RETRY: "in_memory"
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+      HTTP_PORTS: "${APIGATEWAY_API_PORT}"
+      services__product-grpcservice__http__0: "http://product-grpcservice:${PRODUCT_GRPCSERVICE_PORT}"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://production-system-dashboard:18889"
+      OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
+      OTEL_SERVICE_NAME: "apigateway-api"
+    ports:
+      - "7000:${APIGATEWAY_API_PORT}"
+    networks:
+      - "aspire"
+    depends_on:
+      - product-grpcservice
+networks:
+  aspire:
+    driver: "bridge"

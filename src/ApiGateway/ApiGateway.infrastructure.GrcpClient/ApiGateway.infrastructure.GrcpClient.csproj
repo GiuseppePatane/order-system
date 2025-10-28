@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Grpc.Net.Client" Version="2.69.0" />
+        <PackageReference Include="Grpc.Net.ClientFactory" Version="2.69.0" />
+        <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.2" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\..\OrderSystem.ServiceDefaults\OrderSystem.ServiceDefaults.csproj" />
+        <ProjectReference Include="..\..\Product\Product.Proto.Client\Product.Proto.Client.csproj" />
+        <ProjectReference Include="..\ApiGateway.Core\ApiGateway.Core.csproj" />
+    </ItemGroup>
+
+</Project>

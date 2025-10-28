@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Google.Protobuf" Version="3.29.1" />
+        <PackageReference Include="Grpc.Net.Client" Version="2.69.0" />
+        <PackageReference Include="Grpc.Tools" Version="2.69.0">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Protobuf Include="..\Product.Proto\product.proto" GrpcServices="Client" AdditionalImportDirs="..\..\Shared\Shared.Proto\Protos">
+            <Link>Protos\product.proto</Link>
+        </Protobuf>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\Shared\Shared.Proto\Shared.Proto.csproj" />
+    </ItemGroup>
+</Project>
