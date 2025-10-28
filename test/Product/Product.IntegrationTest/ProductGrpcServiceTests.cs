@@ -87,10 +87,19 @@ public class ProductGrpcServiceTests : IAsyncLifetime
     public async Task GetProducts_ShouldReturnPaginatedList()
     {
         // Arrange
-       
-        await _factory.SeedDatabaseAsync(async context =>
+
+        await _factory.SeedDatabaseAsync(context =>
         {
-           TestDataGenerator.SeedDatabase(context, categoryCount: 2, productsPerCategory: 10).Wait();
+            var categories = TestDataGenerator.CreateCategories(2);
+            context.Categories.AddRange(categories);
+            context.SaveChanges();
+
+            foreach (var category in categories)
+            {
+                var products = TestDataGenerator.CreateProducts(category.Id, 10);
+                context.Products.AddRange(products);
+            }
+            context.SaveChanges();
         });
 
         // Act

@@ -14,6 +14,7 @@ builder.Services.AddProblemDetails();
 
 // Configure gRPC client with service discovery and resilience
 builder.Services.AddProductGrpcClient("http://product-grpcservice");
+builder.Services.AddUserGrpcClient("http://user-grpcservice");
 
 
 var app = builder.Build();

@@ -11,13 +11,3 @@ message ErrorResponse {
   map<string, string> details = 3;
 }
 
-// Generic result wrapper that can be used with any data type
-// Usage example in your service proto:
-//   import "common.proto";
-//
-//   message YourResponse {
-//     oneof result {
-//       YourData data = 1;
-//       shared.ErrorResponse error = 2;
-//     }
-//   }

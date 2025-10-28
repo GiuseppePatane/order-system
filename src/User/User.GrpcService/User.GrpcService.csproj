@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Grpc.AspNetCore" Version="2.64.0" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.10">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\..\OrderSystem.ServiceDefaults\OrderSystem.ServiceDefaults.csproj" />
+      <ProjectReference Include="..\..\Shared\Shared.Proto\Shared.Proto.csproj" />
+      <ProjectReference Include="..\..\Shared\Shared.GrpcInfrastructure\Shared.GrpcInfrastructure.csproj" />
+      <ProjectReference Include="..\User.Application\User.Application.csproj" />
+      <ProjectReference Include="..\User.Infrastructure\User.Infrastructure.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Protos\" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Protobuf Include="..\User.Proto\user.proto" GrpcServices="Both" AdditionalImportDirs="..\..\Shared\Shared.Proto\Protos">
+            <Link>Protos\user.proto</Link>
+        </Protobuf>
+    </ItemGroup>
+
+</Project>

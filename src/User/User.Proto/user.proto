@@ -1,0 +1,105 @@
+syntax = "proto3";
+
+import "common.proto";
+import "google/protobuf/timestamp.proto";
+
+option csharp_namespace = "User.Protos";
+
+package users;
+
+// User service
+service UserService {
+  // Retrieves a user by ID
+  rpc GetUser (GetUserRequest) returns (UserResponse);
+
+  // Retrieves a paginated list of users
+  rpc GetUsers (GetUsersRequest) returns (GetUsersResponse);
+
+  // Creates a new user
+  rpc CreateUser (CreateUserRequest) returns (UserResponse);
+
+  // Updates an existing user
+  rpc UpdateUser (UpdateUserRequest) returns (UserResponse);
+
+  // Deletes a user
+  rpc DeleteUser (DeleteUserRequest) returns (DeleteUserResponse);
+}
+
+// ===== Get user ======
+message GetUserRequest {
+  string user_id = 1;
+}
+
+message UserResponse {
+  oneof result {
+    UserData data = 1;
+    shared.ErrorResponse error = 2;
+  }
+}
+
+// ===== Get users (paginated) ======
+message GetUsersRequest {
+  int32 page_number = 1;
+  int32 page_size = 2;
+  optional string search_term = 3; // search by name/email
+  optional string role = 4; // optional filter
+  optional bool is_active = 5;
+}
+
+message GetUsersResponse {
+  oneof result {
+    UserListData data = 1;
+    shared.ErrorResponse error = 2;
+  }
+}
+
+message UserListData {
+  repeated UserData items = 1;
+  int32 page_number = 2;
+  int32 page_size = 3;
+  int32 total_count = 4;
+}
+
+// ===== Create / Update / Delete ======
+message CreateUserRequest {
+  string first_name = 1;
+  string last_name = 2;
+  string email = 3;
+  optional bool is_active = 4;
+}
+
+message UpdateUserRequest {
+  string user_id = 1;
+  optional string first_name = 2;
+  optional string last_name = 3;
+  optional string email = 4;
+  optional bool is_active = 5;
+}
+
+message DeleteUserRequest {
+  string user_id = 1;
+}
+
+message DeleteUserResponse {
+  oneof result {
+    DeleteUserData data = 1;
+    shared.ErrorResponse error = 2;
+  }
+}
+
+message DeleteUserData {
+  bool success = 1;
+  string user_id = 2;
+}
+
+// ===== User data model ======
+message UserData {
+  string user_id = 1;
+  string first_name = 2;
+  string last_name = 3;
+  string email = 4;
+  bool is_active = 5;
+  google.protobuf.Timestamp created_at = 6;
+  optional google.protobuf.Timestamp updated_at = 7;
+}
+

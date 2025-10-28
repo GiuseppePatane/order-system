@@ -171,7 +171,7 @@ public abstract class GrpcIntegrationTestFactory<TProgram, TDbContext> : WebAppl
             SchemasToInclude = new[] { "public" },
             TablesToIgnore = new []
             {
-                "__EFMigrationsHistory"
+                new Respawn.Graph.Table("__EFMigrationsHistory")
             }
         });
     }

@@ -23,6 +23,8 @@
       <ProjectReference Include="..\src\ApiGateway\ApiGateway.Api\ApiGateway.Api.csproj" />
       <ProjectReference Include="..\src\Product\Product.DataMigrator\Product.DataMigrator.csproj" />
       <ProjectReference Include="..\src\Product\Product.GrpcService\Product.GrpcService.csproj" />
+      <ProjectReference Include="..\src\User\User.DataMigrator\User.DataMigrator.csproj" />
+      <ProjectReference Include="..\src\User\User.GrpcService\User.GrpcService.csproj" />
     </ItemGroup>
 
 </Project>

@@ -33,7 +33,7 @@ public class ProductGrpcService : ProductService.ProductServiceBase
 
     public override async Task<ProductResponse> GetProduct(
         GetProductRequest request,
-        Grpc.Core.ServerCallContext context
+        ServerCallContext context
     )
     {
         try
@@ -54,7 +54,7 @@ public class ProductGrpcService : ProductService.ProductServiceBase
             if (productResult.IsFailure)
             {
                 var error = productResult.Error;
-                if (error is Shared.Core.Domain.Errors.NotFoundError)
+                if (error is NotFoundError)
                 {
                     return new ProductResponse
                     {
@@ -93,7 +93,7 @@ public class ProductGrpcService : ProductService.ProductServiceBase
 
     public override async Task<ProductResponse> CreateProduct(
         CreateProductRequest request,
-        Grpc.Core.ServerCallContext context
+        ServerCallContext context
     )
     {
         try
