@@ -4,8 +4,12 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ApiGateway.Api.Controllers;
 
+/// <summary>
+/// Manages product operations through the Product gRPC service
+/// </summary>
 [ApiController]
 [Route("api/products")]
+[Produces("application/json")]
 public class ProductsController : ControllerBase
 {
     private readonly IProductServiceClient _productServiceClient;
@@ -19,6 +23,14 @@ public class ProductsController : ControllerBase
         _logger = logger;
     }
 
+    /// <summary>
+    /// Retrieves a single product by its ID
+    /// </summary>
+    /// <param name="id">The product ID (GUID format)</param>
+    /// <returns>The product details</returns>
+    /// <response code="200">Returns the product details</response>
+    /// <response code="404">Product not found</response>
+    /// <response code="400">Invalid product ID format</response>
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(ProductDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
@@ -38,6 +50,13 @@ public class ProductsController : ControllerBase
     }
 
 
+    /// <summary>
+    /// Creates a new product
+    /// </summary>
+    /// <param name="request">The product creation data</param>
+    /// <returns>The created product</returns>
+    /// <response code="201">Product created successfully</response>
+    /// <response code="400">Invalid product data</response>
     [HttpPost]
     [ProducesResponseType(typeof(ProductDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -54,7 +73,17 @@ public class ProductsController : ControllerBase
     }
 
 
-    [HttpGet("{page}/{pageSize}")]
+    /// <summary>
+    /// Retrieves a paginated list of products
+    /// </summary>
+    /// <param name="pageNumber">Page number (default: 1)</param>
+    /// <param name="pageSize">Page size (default: 10, max: 100)</param>
+    /// <param name="categoryId">Optional category filter (GUID)</param>
+    /// <param name="searchTerm">Optional search term for product name/description</param>
+    /// <param name="isActive">Optional filter for active products</param>
+    /// <returns>A paginated list of products</returns>
+    /// <response code="200">Returns the paginated product list</response>
+    [HttpGet("{pageNumber}/{pageSize}")]
     [ProducesResponseType(typeof(PagedProductsDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetProducts([FromRoute] int pageNumber = 1, [FromRoute] int pageSize = 10, [FromQuery] string? categoryId = null, [FromQuery] string? searchTerm = null, [FromQuery] bool? isActive = null)
@@ -75,7 +104,16 @@ public class ProductsController : ControllerBase
         return MapErrorToProblemDetails(result.Error!);
     }
 
-   
+
+    /// <summary>
+    /// Updates an existing product
+    /// </summary>
+    /// <param name="id">The product ID to update</param>
+    /// <param name="request">The product update data (only provide fields to update)</param>
+    /// <returns>The updated product</returns>
+    /// <response code="200">Product updated successfully</response>
+    /// <response code="404">Product not found</response>
+    /// <response code="400">Invalid product data</response>
     [HttpPut("{id}")]
     [ProducesResponseType(typeof(ProductDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -90,7 +128,14 @@ public class ProductsController : ControllerBase
 
         return MapErrorToProblemDetails(result.Error!);
     }
-    
+
+    /// <summary>
+    /// Deletes a product
+    /// </summary>
+    /// <param name="id">The product ID to delete</param>
+    /// <returns>No content on success</returns>
+    /// <response code="204">Product deleted successfully</response>
+    /// <response code="404">Product not found</response>
     [HttpDelete("{id}")]
     [ProducesResponseType(typeof(void), StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
@@ -117,7 +162,7 @@ public class ProductsController : ControllerBase
         {
             problemDetails.Extensions["additionalDetails"] = error.Details;
         }
-        
+
         var (statusCode, type) = error.Code switch
         {
             "PRODUCT_NOT_FOUND" => (StatusCodes.Status404NotFound, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.4"),

@@ -13,7 +13,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddDbContext<UserDbContext>(options =>
         {
-            options.UseNpgsql(configuration.GetConnectionString("UserDatabase"));
+            options.UseNpgsql(configuration.GetConnectionString("userdb"));
         });
 
         services.AddUserRepositories();

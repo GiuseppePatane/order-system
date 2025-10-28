@@ -4,8 +4,12 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ApiGateway.Api.Controllers;
 
+/// <summary>
+/// Manages user operations through the User gRPC service
+/// </summary>
 [ApiController]
 [Route("api/users")]
+[Produces("application/json")]
 public class UsersController : ControllerBase
 {
     private readonly IUserServiceClient _userServiceClient;
@@ -19,6 +23,14 @@ public class UsersController : ControllerBase
         _logger = logger;
     }
 
+    /// <summary>
+    /// Retrieves a single user by their ID
+    /// </summary>
+    /// <param name="id">The user ID (GUID format)</param>
+    /// <returns>The user details</returns>
+    /// <response code="200">Returns the user details</response>
+    /// <response code="404">User not found</response>
+    /// <response code="400">Invalid user ID format</response>
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
@@ -33,11 +45,18 @@ public class UsersController : ControllerBase
             return Ok(result.Data);
         }
 
-        
+
         return MapErrorToProblemDetails(result.Error!);
     }
 
 
+    /// <summary>
+    /// Creates a new user
+    /// </summary>
+    /// <param name="request">The user creation data</param>
+    /// <returns>The created user</returns>
+    /// <response code="201">User created successfully</response>
+    /// <response code="400">Invalid user data or duplicate email</response>
     [HttpPost]
     [ProducesResponseType(typeof(UserDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -54,7 +73,15 @@ public class UsersController : ControllerBase
     }
 
 
-    [HttpGet("{page}/{pageSize}")]
+    /// <summary>
+    /// Retrieves a paginated list of users
+    /// </summary>
+    /// <param name="pageNumber">Page number (default: 1)</param>
+    /// <param name="pageSize">Page size (default: 10, max: 100)</param>
+    /// <param name="searchTerm">Optional search term for user name or email</param>
+    /// <returns>A paginated list of users</returns>
+    /// <response code="200">Returns the paginated user list</response>
+    [HttpGet("{pageNumber}/{pageSize}")]
     [ProducesResponseType(typeof(PagedUsersDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetUsers([FromRoute] int pageNumber = 1, [FromRoute] int pageSize = 10, [FromQuery] string? searchTerm = null)
@@ -74,6 +101,15 @@ public class UsersController : ControllerBase
     }
 
 
+    /// <summary>
+    /// Updates an existing user
+    /// </summary>
+    /// <param name="id">The user ID to update</param>
+    /// <param name="request">The user update data (only provide fields to update)</param>
+    /// <returns>The updated user</returns>
+    /// <response code="200">User updated successfully</response>
+    /// <response code="404">User not found</response>
+    /// <response code="400">Invalid user data</response>
     [HttpPut("{id}")]
     [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -89,6 +125,13 @@ public class UsersController : ControllerBase
         return MapErrorToProblemDetails(result.Error!);
     }
 
+    /// <summary>
+    /// Deletes a user
+    /// </summary>
+    /// <param name="id">The user ID to delete</param>
+    /// <returns>No content on success</returns>
+    /// <response code="204">User deleted successfully</response>
+    /// <response code="404">User not found</response>
     [HttpDelete("{id}")]
     [ProducesResponseType(typeof(void), StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
