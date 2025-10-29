@@ -1,13 +1,14 @@
 using Order.Application.Extensions;
 using Order.GrpcService.Services;
 using Order.Infrastructure.Extensions;
+using Shared.GrpcInfrastructure.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
 // Add services to the container.
-builder.Services.AddGrpc();
+builder.Services.AddGrpcWithErrorHandling();
 
 // Add Application and Infrastructure services
 builder.Services.AddOrderApplication();

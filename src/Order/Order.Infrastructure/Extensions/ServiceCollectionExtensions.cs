@@ -16,7 +16,7 @@ public static class ServiceCollectionExtensions
         IHostEnvironment environment)
     {
         // Register DbContext
-        var connectionString = configuration.GetConnectionString("OrderDatabase");
+        var connectionString = configuration.GetConnectionString("orderdb");
 
         services.AddDbContext<OrderDbContext>(options =>
         {

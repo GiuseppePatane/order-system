@@ -5,6 +5,9 @@ using Order.Core.Repositories;
 using Order.Application.Commands.CreateOrder;
 using Order.Application.Commands.UpdateOrderStatus;
 using Order.Application.Commands.CancelOrder;
+using Order.Application.Commands.AddOrderItem;
+using Order.Application.Commands.RemoveOrderItem;
+using Order.Application.Commands.UpdateOrderItemQuantity;
 using Shared.GrpcInfrastructure.Base;
 using Shared.Core.Domain.Errors;
 
@@ -17,6 +20,9 @@ public class OrderGrpcService : OrderService.OrderServiceBase
     private readonly CreateOrderHandler _createOrderHandler;
     private readonly UpdateOrderStatusHandler _updateOrderStatusHandler;
     private readonly CancelOrderHandler _cancelOrderHandler;
+    private readonly AddOrderItemHandler _addOrderItemHandler;
+    private readonly RemoveOrderItemHandler _removeOrderItemHandler;
+    private readonly UpdateOrderItemQuantityHandler _updateOrderItemQuantityHandler;
     private readonly GrpcServiceBase<OrderGrpcService> _baseService;
 
     public OrderGrpcService(
@@ -24,13 +30,19 @@ public class OrderGrpcService : OrderService.OrderServiceBase
         IOrderReadOnlyRepository orderRepository,
         CreateOrderHandler createOrderHandler,
         UpdateOrderStatusHandler updateOrderStatusHandler,
-        CancelOrderHandler cancelOrderHandler)
+        CancelOrderHandler cancelOrderHandler,
+        AddOrderItemHandler addOrderItemHandler,
+        RemoveOrderItemHandler removeOrderItemHandler,
+        UpdateOrderItemQuantityHandler updateOrderItemQuantityHandler)
     {
         _logger = logger;
         _orderRepository = orderRepository;
         _createOrderHandler = createOrderHandler;
         _updateOrderStatusHandler = updateOrderStatusHandler;
         _cancelOrderHandler = cancelOrderHandler;
+        _addOrderItemHandler = addOrderItemHandler;
+        _removeOrderItemHandler = removeOrderItemHandler;
+        _updateOrderItemQuantityHandler = updateOrderItemQuantityHandler;
         _baseService = new InternalGrpcServiceBase(logger);
     }
 
@@ -377,6 +389,190 @@ public class OrderGrpcService : OrderService.OrderServiceBase
             OrderStatus.Cancelled => Core.Domain.OrderStatus.Cancelled,
             _ => Core.Domain.OrderStatus.Pending
         };
+    }
+
+    public override async Task<AddOrderItemResponse> AddOrderItem(AddOrderItemRequest request, ServerCallContext context)
+    {
+        try
+        {
+            if (!_baseService.IsValidGuid(request.OrderId, out var orderId))
+            {
+                return new AddOrderItemResponse
+                {
+                    Error = _baseService.CreateInvalidArgumentError("OrderId", "invalid or missing GUID")
+                };
+            }
+
+            if (!_baseService.IsValidGuid(request.ProductId, out var productId))
+            {
+                return new AddOrderItemResponse
+                {
+                    Error = _baseService.CreateInvalidArgumentError("ProductId", "invalid or missing GUID")
+                };
+            }
+
+            var command = new AddOrderItemCommand(orderId, productId, request.Quantity, (decimal)request.UnitPrice);
+            var result = await _addOrderItemHandler.Handle(command, context.CancellationToken);
+
+            if (result.IsFailure)
+            {
+                var error = result.Error;
+                if (error is ValidationError ve)
+                {
+                    return new AddOrderItemResponse
+                    {
+                        Error = _baseService.CreateInvalidArgumentError(ve.FieldName, ve.Reason)
+                    };
+                }
+                if (error is NotFoundError)
+                {
+                    return new AddOrderItemResponse
+                    {
+                        Error = _baseService.CreateNotFoundError("Order", request.OrderId)
+                    };
+                }
+
+                return new AddOrderItemResponse { Error = _baseService.CreateInternalError(error.Message) };
+            }
+
+            return new AddOrderItemResponse
+            {
+                Data = new AddOrderItemData
+                {
+                    OrderId = result.Value.OrderId.ToString(),
+                    ItemId = result.Value.ItemId.ToString()
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error in AddOrderItem for OrderId: {OrderId}", request.OrderId);
+            return new AddOrderItemResponse { Error = _baseService.CreateInternalError() };
+        }
+    }
+
+    public override async Task<RemoveOrderItemResponse> RemoveOrderItem(RemoveOrderItemRequest request, ServerCallContext context)
+    {
+        try
+        {
+            if (!_baseService.IsValidGuid(request.OrderId, out var orderId))
+            {
+                return new RemoveOrderItemResponse
+                {
+                    Error = _baseService.CreateInvalidArgumentError("OrderId", "invalid or missing GUID")
+                };
+            }
+
+            if (!_baseService.IsValidGuid(request.ItemId, out var itemId))
+            {
+                return new RemoveOrderItemResponse
+                {
+                    Error = _baseService.CreateInvalidArgumentError("ItemId", "invalid or missing GUID")
+                };
+            }
+
+            var command = new RemoveOrderItemCommand(orderId, itemId);
+            var result = await _removeOrderItemHandler.Handle(command, context.CancellationToken);
+
+            if (result.IsFailure)
+            {
+                var error = result.Error;
+                if (error is ValidationError ve)
+                {
+                    return new RemoveOrderItemResponse
+                    {
+                        Error = _baseService.CreateInvalidArgumentError(ve.FieldName, ve.Reason)
+                    };
+                }
+                if (error is NotFoundError nfe)
+                {
+                    return new RemoveOrderItemResponse
+                    {
+                        Error = _baseService.CreateNotFoundError(nfe.EntityType, nfe.EntityId)
+                    };
+                }
+
+                return new RemoveOrderItemResponse { Error = _baseService.CreateInternalError(error.Message) };
+            }
+
+            return new RemoveOrderItemResponse
+            {
+                Data = new RemoveOrderItemData
+                {
+                    OrderId = result.Value.OrderId.ToString(),
+                    Success = result.Value.Success
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error in RemoveOrderItem for OrderId: {OrderId}, ItemId: {ItemId}",
+                request.OrderId, request.ItemId);
+            return new RemoveOrderItemResponse { Error = _baseService.CreateInternalError() };
+        }
+    }
+
+    public override async Task<UpdateOrderItemQuantityResponse> UpdateOrderItemQuantity(
+        UpdateOrderItemQuantityRequest request, ServerCallContext context)
+    {
+        try
+        {
+            if (!_baseService.IsValidGuid(request.OrderId, out var orderId))
+            {
+                return new UpdateOrderItemQuantityResponse
+                {
+                    Error = _baseService.CreateInvalidArgumentError("OrderId", "invalid or missing GUID")
+                };
+            }
+
+            if (!_baseService.IsValidGuid(request.ItemId, out var itemId))
+            {
+                return new UpdateOrderItemQuantityResponse
+                {
+                    Error = _baseService.CreateInvalidArgumentError("ItemId", "invalid or missing GUID")
+                };
+            }
+
+            var command = new UpdateOrderItemQuantityCommand(orderId, itemId, request.NewQuantity);
+            var result = await _updateOrderItemQuantityHandler.Handle(command, context.CancellationToken);
+
+            if (result.IsFailure)
+            {
+                var error = result.Error;
+                if (error is ValidationError ve)
+                {
+                    return new UpdateOrderItemQuantityResponse
+                    {
+                        Error = _baseService.CreateInvalidArgumentError(ve.FieldName, ve.Reason)
+                    };
+                }
+                if (error is NotFoundError nfe)
+                {
+                    return new UpdateOrderItemQuantityResponse
+                    {
+                        Error = _baseService.CreateNotFoundError(nfe.EntityType, nfe.EntityId)
+                    };
+                }
+
+                return new UpdateOrderItemQuantityResponse { Error = _baseService.CreateInternalError(error.Message) };
+            }
+
+            return new UpdateOrderItemQuantityResponse
+            {
+                Data = new UpdateOrderItemQuantityData
+                {
+                    OrderId = result.Value.OrderId.ToString(),
+                    ItemId = result.Value.ItemId.ToString(),
+                    NewQuantity = result.Value.NewQuantity
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error in UpdateOrderItemQuantity for OrderId: {OrderId}, ItemId: {ItemId}",
+                request.OrderId, request.ItemId);
+            return new UpdateOrderItemQuantityResponse { Error = _baseService.CreateInternalError() };
+        }
     }
 
     private class InternalGrpcServiceBase : GrpcServiceBase<OrderGrpcService>

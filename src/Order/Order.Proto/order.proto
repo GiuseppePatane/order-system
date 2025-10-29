@@ -26,6 +26,15 @@ service OrderService {
 
   // Cancels an order
   rpc CancelOrder (CancelOrderRequest) returns (OrderResponse);
+
+  // Adds an item to an existing order (only for pending orders)
+  rpc AddOrderItem (AddOrderItemRequest) returns (AddOrderItemResponse);
+
+  // Removes an item from an existing order (only for pending orders)
+  rpc RemoveOrderItem (RemoveOrderItemRequest) returns (RemoveOrderItemResponse);
+
+  // Updates the quantity of an order item (only for pending orders)
+  rpc UpdateOrderItemQuantity (UpdateOrderItemQuantityRequest) returns (UpdateOrderItemQuantityResponse);
 }
 
 // ===== Get order ======
@@ -133,4 +142,62 @@ message OrderItemData {
   int32 quantity = 3;
   double unit_price = 4;
   double total_price = 5;
+}
+
+// ===== Add Order Item ======
+message AddOrderItemRequest {
+  string order_id = 1;
+  string product_id = 2;
+  int32 quantity = 3;
+  double unit_price = 4;
+}
+
+message AddOrderItemResponse {
+  oneof result {
+    AddOrderItemData data = 1;
+    shared.ErrorResponse error = 2;
+  }
+}
+
+message AddOrderItemData {
+  string order_id = 1;
+  string item_id = 2;
+}
+
+// ===== Remove Order Item ======
+message RemoveOrderItemRequest {
+  string order_id = 1;
+  string item_id = 2;
+}
+
+message RemoveOrderItemResponse {
+  oneof result {
+    RemoveOrderItemData data = 1;
+    shared.ErrorResponse error = 2;
+  }
+}
+
+message RemoveOrderItemData {
+  string order_id = 1;
+  bool success = 2;
+}
+
+// ===== Update Order Item Quantity ======
+message UpdateOrderItemQuantityRequest {
+  string order_id = 1;
+  string item_id = 2;
+  int32 new_quantity = 3;
+}
+
+message UpdateOrderItemQuantityResponse {
+  oneof result {
+    UpdateOrderItemQuantityData data = 1;
+    shared.ErrorResponse error = 2;
+  }
+}
+
+message UpdateOrderItemQuantityData {
+  string order_id = 1;
+  string item_id = 2;
+  int32 new_quantity = 3;
 }

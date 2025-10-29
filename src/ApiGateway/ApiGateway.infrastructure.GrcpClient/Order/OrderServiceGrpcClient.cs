@@ -18,7 +18,7 @@ public class OrderServiceGrpcClient : IOrderServiceClient
         _logger = logger;
     }
 
-    public async Task<ServiceResult<OrderDto>> CreateOrder(CreateOrderRequestDto request)
+    public async Task<ServiceResult<OrderDto>> CreateOrder(CreateOrderRequestWithPricesDto request)
     {
         try
         {
@@ -29,14 +29,14 @@ public class OrderServiceGrpcClient : IOrderServiceClient
                 BillingAddressId = request.BillingAddressId?.ToString()
             };
 
-            // Map items
+            // Map items with server-validated prices
             foreach (var item in request.Items)
             {
                 grpcRequest.Items.Add(new OrderItemInput
                 {
                     ProductId = item.ProductId.ToString(),
                     Quantity = item.Quantity,
-                    UnitPrice = (double)item.UnitPrice
+                    UnitPrice = (double)item.UnitPrice // Price from ProductService
                 });
             }
 
@@ -236,5 +236,124 @@ public class OrderServiceGrpcClient : IOrderServiceClient
             OrderStatus.Cancelled => "Cancelled",
             _ => "Unknown"
         };
+    }
+
+    public async Task<ServiceResult<AddOrderItemResultDto>> AddOrderItem(string orderId, AddOrderItemRequestDto request)
+    {
+        try
+        {
+            var grpcRequest = new AddOrderItemRequest
+            {
+                OrderId = orderId,
+                ProductId = request.ProductId.ToString(),
+                Quantity = request.Quantity,
+                UnitPrice = (double)request.UnitPrice
+            };
+
+            var response = await _grpcClient.AddOrderItemAsync(grpcRequest);
+
+            if (response.ResultCase == AddOrderItemResponse.ResultOneofCase.Data)
+            {
+                return ServiceResult<AddOrderItemResultDto>.Success(new AddOrderItemResultDto
+                {
+                    OrderId = response.Data.OrderId,
+                    ItemId = response.Data.ItemId
+                });
+            }
+
+            return ServiceResult<AddOrderItemResultDto>.Failure(new ErrorInfo
+            {
+                Code = response.Error.Code,
+                Message = response.Error.Message
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error adding item to order {OrderId} via gRPC", orderId);
+            return ServiceResult<AddOrderItemResultDto>.Failure(new ErrorInfo
+            {
+                Code = "GRPC_ERROR",
+                Message = $"Failed to add item to order: {ex.Message}"
+            });
+        }
+    }
+
+    public async Task<ServiceResult<RemoveOrderItemResultDto>> RemoveOrderItem(string orderId, string itemId)
+    {
+        try
+        {
+            var grpcRequest = new RemoveOrderItemRequest
+            {
+                OrderId = orderId,
+                ItemId = itemId
+            };
+
+            var response = await _grpcClient.RemoveOrderItemAsync(grpcRequest);
+
+            if (response.ResultCase == RemoveOrderItemResponse.ResultOneofCase.Data)
+            {
+                return ServiceResult<RemoveOrderItemResultDto>.Success(new RemoveOrderItemResultDto
+                {
+                    OrderId = response.Data.OrderId,
+                    Success = response.Data.Success
+                });
+            }
+
+            return ServiceResult<RemoveOrderItemResultDto>.Failure(new ErrorInfo
+            {
+                Code = response.Error.Code,
+                Message = response.Error.Message
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error removing item {ItemId} from order {OrderId} via gRPC", itemId, orderId);
+            return ServiceResult<RemoveOrderItemResultDto>.Failure(new ErrorInfo
+            {
+                Code = "GRPC_ERROR",
+                Message = $"Failed to remove item from order: {ex.Message}"
+            });
+        }
+    }
+
+    public async Task<ServiceResult<UpdateOrderItemQuantityResultDto>> UpdateOrderItemQuantity(
+        string orderId, string itemId, int newQuantity)
+    {
+        try
+        {
+            var grpcRequest = new UpdateOrderItemQuantityRequest
+            {
+                OrderId = orderId,
+                ItemId = itemId,
+                NewQuantity = newQuantity
+            };
+
+            var response = await _grpcClient.UpdateOrderItemQuantityAsync(grpcRequest);
+
+            if (response.ResultCase == UpdateOrderItemQuantityResponse.ResultOneofCase.Data)
+            {
+                return ServiceResult<UpdateOrderItemQuantityResultDto>.Success(new UpdateOrderItemQuantityResultDto
+                {
+                    OrderId = response.Data.OrderId,
+                    ItemId = response.Data.ItemId,
+                    NewQuantity = response.Data.NewQuantity
+                });
+            }
+
+            return ServiceResult<UpdateOrderItemQuantityResultDto>.Failure(new ErrorInfo
+            {
+                Code = response.Error.Code,
+                Message = response.Error.Message
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating item {ItemId} quantity in order {OrderId} via gRPC", itemId, orderId);
+            return ServiceResult<UpdateOrderItemQuantityResultDto>.Failure(new ErrorInfo
+            {
+                Code = "GRPC_ERROR",
+                Message = $"Failed to update item quantity: {ex.Message}"
+            });
+        }
     }
 }

@@ -7,7 +7,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
-
 builder.Services.AddGrpcWithErrorHandling();
 
 
@@ -17,6 +16,7 @@ builder.Services.AddProductApplication();
 var app = builder.Build();
 
 app.MapDefaultEndpoints();
+
 
 app.MapGrpcService<ProductGrpcService>();
 app.MapGet("/",

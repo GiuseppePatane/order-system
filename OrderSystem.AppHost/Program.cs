@@ -12,7 +12,7 @@ var userDb = postgres.AddDatabase("userdb");
 var addressDb = postgres.AddDatabase("addressdb");
 var orderDb = postgres.AddDatabase("orderdb");
 
-var productMigration = builder.AddProject<Projects.Product_DataMigrator>("catalog-migrator")
+var productMigration = builder.AddProject<Projects.Product_DataMigrator>("product-migrator")
     .WithReference(productDb);
 
 var userMigration = builder.AddProject<Projects.User_DataMigrator>("user-migrator")

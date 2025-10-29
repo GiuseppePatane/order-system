@@ -48,8 +48,5 @@ public static class DbInitializer
         }
 
         logger.LogInformation("Order database is ready. No seed data required.");
-
-        // Orders are typically created through the application, not seeded
-        // If you need to seed test orders, add logic here
     }
 }

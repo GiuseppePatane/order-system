@@ -331,4 +331,279 @@ public class OrderTests
         // Assert
         order.TotalAmount.ShouldBe(61.75m); // (2*10.50) + (1*25.75) + (3*5.00)
     }
+
+
+    // ============================================
+    // COMPLETE UPDATE STATUS TRANSITION TESTS
+    // ============================================
+
+    [Fact]
+    public void UpdateStatus_PendingToConfirmed_ShouldSucceed()
+    {
+        // Arrange
+        var items = new List<OrderItem> { OrderItem.Create(Guid.NewGuid(), 1, 10.00m).Value! };
+        var order = Core.Domain.Order.Create(_userId, _shippingAddressId, items).Value!;
+
+        // Act
+        var result = order.UpdateStatus(OrderStatus.Confirmed);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        order.Status.ShouldBe(OrderStatus.Confirmed);
+        order.UpdatedAt.ShouldNotBeNull();
+    }
+
+    [Fact]
+    public void UpdateStatus_ConfirmedToProcessing_ShouldSucceed()
+    {
+        // Arrange
+        var items = new List<OrderItem> { OrderItem.Create(Guid.NewGuid(), 1, 10.00m).Value! };
+        var order = Core.Domain.Order.Create(_userId, _shippingAddressId, items).Value!;
+        order.UpdateStatus(OrderStatus.Confirmed);
+
+        // Act
+        var result = order.UpdateStatus(OrderStatus.Processing);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        order.Status.ShouldBe(OrderStatus.Processing);
+    }
+
+    [Fact]
+    public void UpdateStatus_ProcessingToShipped_ShouldSucceed()
+    {
+        // Arrange
+        var items = new List<OrderItem> { OrderItem.Create(Guid.NewGuid(), 1, 10.00m).Value! };
+        var order = Core.Domain.Order.Create(_userId, _shippingAddressId, items).Value!;
+        order.UpdateStatus(OrderStatus.Confirmed);
+        order.UpdateStatus(OrderStatus.Processing);
+
+        // Act
+        var result = order.UpdateStatus(OrderStatus.Shipped);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        order.Status.ShouldBe(OrderStatus.Shipped);
+    }
+
+    [Fact]
+    public void UpdateStatus_ShippedToDelivered_ShouldSucceed()
+    {
+        // Arrange
+        var items = new List<OrderItem> { OrderItem.Create(Guid.NewGuid(), 1, 10.00m).Value! };
+        var order = Core.Domain.Order.Create(_userId, _shippingAddressId, items).Value!;
+        order.UpdateStatus(OrderStatus.Confirmed);
+        order.UpdateStatus(OrderStatus.Processing);
+        order.UpdateStatus(OrderStatus.Shipped);
+
+        // Act
+        var result = order.UpdateStatus(OrderStatus.Delivered);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        order.Status.ShouldBe(OrderStatus.Delivered);
+    }
+
+    [Fact]
+    public void UpdateStatus_PendingToCancelled_ShouldSucceed()
+    {
+        // Arrange
+        var items = new List<OrderItem> { OrderItem.Create(Guid.NewGuid(), 1, 10.00m).Value! };
+        var order = Core.Domain.Order.Create(_userId, _shippingAddressId, items).Value!;
+
+        // Act
+        var result = order.UpdateStatus(OrderStatus.Cancelled);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        order.Status.ShouldBe(OrderStatus.Cancelled);
+    }
+
+    [Fact]
+    public void UpdateStatus_ConfirmedToCancelled_ShouldSucceed()
+    {
+        // Arrange
+        var items = new List<OrderItem> { OrderItem.Create(Guid.NewGuid(), 1, 10.00m).Value! };
+        var order = Core.Domain.Order.Create(_userId, _shippingAddressId, items).Value!;
+        order.UpdateStatus(OrderStatus.Confirmed);
+
+        // Act
+        var result = order.UpdateStatus(OrderStatus.Cancelled);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        order.Status.ShouldBe(OrderStatus.Cancelled);
+    }
+
+    [Fact]
+    public void UpdateStatus_ProcessingToCancelled_ShouldSucceed()
+    {
+        // Arrange
+        var items = new List<OrderItem> { OrderItem.Create(Guid.NewGuid(), 1, 10.00m).Value! };
+        var order = Core.Domain.Order.Create(_userId, _shippingAddressId, items).Value!;
+        order.UpdateStatus(OrderStatus.Confirmed);
+        order.UpdateStatus(OrderStatus.Processing);
+
+        // Act
+        var result = order.UpdateStatus(OrderStatus.Cancelled);
+
+        // Assert
+        result.IsSuccess.ShouldBeTrue();
+        order.Status.ShouldBe(OrderStatus.Cancelled);
+    }
+
+    // Invalid transitions
+
+    [Fact]
+    public void UpdateStatus_SameStatus_ShouldFail()
+    {
+        // Arrange
+        var items = new List<OrderItem> { OrderItem.Create(Guid.NewGuid(), 1, 10.00m).Value! };
+        var order = Core.Domain.Order.Create(_userId, _shippingAddressId, items).Value!;
+
+        // Act
+        var result = order.UpdateStatus(OrderStatus.Pending);
+
+        // Assert
+        result.IsFailure.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void UpdateStatus_PendingToProcessing_ShouldFail()
+    {
+        // Arrange
+        var items = new List<OrderItem> { OrderItem.Create(Guid.NewGuid(), 1, 10.00m).Value! };
+        var order = Core.Domain.Order.Create(_userId, _shippingAddressId, items).Value!;
+
+        // Act
+        var result = order.UpdateStatus(OrderStatus.Processing);
+
+        // Assert
+        result.IsFailure.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void UpdateStatus_PendingToShipped_ShouldFail()
+    {
+        // Arrange
+        var items = new List<OrderItem> { OrderItem.Create(Guid.NewGuid(), 1, 10.00m).Value! };
+        var order = Core.Domain.Order.Create(_userId, _shippingAddressId, items).Value!;
+
+        // Act
+        var result = order.UpdateStatus(OrderStatus.Shipped);
+
+        // Assert
+        result.IsFailure.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void UpdateStatus_PendingToDelivered_ShouldFail()
+    {
+        // Arrange
+        var items = new List<OrderItem> { OrderItem.Create(Guid.NewGuid(), 1, 10.00m).Value! };
+        var order = Core.Domain.Order.Create(_userId, _shippingAddressId, items).Value!;
+
+        // Act
+        var result = order.UpdateStatus(OrderStatus.Delivered);
+
+        // Assert
+        result.IsFailure.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void UpdateStatus_ShippedToCancelled_ShouldFail()
+    {
+        // Arrange
+        var items = new List<OrderItem> { OrderItem.Create(Guid.NewGuid(), 1, 10.00m).Value! };
+        var order = Core.Domain.Order.Create(_userId, _shippingAddressId, items).Value!;
+        order.UpdateStatus(OrderStatus.Confirmed);
+        order.UpdateStatus(OrderStatus.Processing);
+        order.UpdateStatus(OrderStatus.Shipped);
+
+        // Act
+        var result = order.UpdateStatus(OrderStatus.Cancelled);
+
+        // Assert
+        result.IsFailure.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void UpdateStatus_DeliveredToAnyStatus_ShouldFail()
+    {
+        // Arrange
+        var items = new List<OrderItem> { OrderItem.Create(Guid.NewGuid(), 1, 10.00m).Value! };
+        var order = Core.Domain.Order.Create(_userId, _shippingAddressId, items).Value!;
+        order.UpdateStatus(OrderStatus.Confirmed);
+        order.UpdateStatus(OrderStatus.Processing);
+        order.UpdateStatus(OrderStatus.Shipped);
+        order.UpdateStatus(OrderStatus.Delivered);
+
+        // Act & Assert
+        order.UpdateStatus(OrderStatus.Pending).IsFailure.ShouldBeTrue();
+        order.UpdateStatus(OrderStatus.Confirmed).IsFailure.ShouldBeTrue();
+        order.UpdateStatus(OrderStatus.Processing).IsFailure.ShouldBeTrue();
+        order.UpdateStatus(OrderStatus.Shipped).IsFailure.ShouldBeTrue();
+        order.UpdateStatus(OrderStatus.Cancelled).IsFailure.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void UpdateStatus_CancelledToAnyStatus_ShouldFail()
+    {
+        // Arrange
+        var items = new List<OrderItem> { OrderItem.Create(Guid.NewGuid(), 1, 10.00m).Value! };
+        var order = Core.Domain.Order.Create(_userId, _shippingAddressId, items).Value!;
+        order.UpdateStatus(OrderStatus.Cancelled);
+
+        // Act & Assert
+        order.UpdateStatus(OrderStatus.Confirmed).IsFailure.ShouldBeTrue();
+        order.UpdateStatus(OrderStatus.Processing).IsFailure.ShouldBeTrue();
+        order.UpdateStatus(OrderStatus.Shipped).IsFailure.ShouldBeTrue();
+        order.UpdateStatus(OrderStatus.Delivered).IsFailure.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void UpdateStatus_ConfirmedToPending_ShouldFail()
+    {
+        // Arrange
+        var items = new List<OrderItem> { OrderItem.Create(Guid.NewGuid(), 1, 10.00m).Value! };
+        var order = Core.Domain.Order.Create(_userId, _shippingAddressId, items).Value!;
+        order.UpdateStatus(OrderStatus.Confirmed);
+
+        // Act
+        var result = order.UpdateStatus(OrderStatus.Pending);
+
+        // Assert
+        result.IsFailure.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void UpdateStatus_ProcessingToPending_ShouldFail()
+    {
+        // Arrange
+        var items = new List<OrderItem> { OrderItem.Create(Guid.NewGuid(), 1, 10.00m).Value! };
+        var order = Core.Domain.Order.Create(_userId, _shippingAddressId, items).Value!;
+        order.UpdateStatus(OrderStatus.Confirmed);
+        order.UpdateStatus(OrderStatus.Processing);
+
+        // Act
+        var result = order.UpdateStatus(OrderStatus.Pending);
+
+        // Assert
+        result.IsFailure.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void UpdateStatus_ConfirmedToShipped_ShouldFail()
+    {
+        // Arrange
+        var items = new List<OrderItem> { OrderItem.Create(Guid.NewGuid(), 1, 10.00m).Value! };
+        var order = Core.Domain.Order.Create(_userId, _shippingAddressId, items).Value!;
+        order.UpdateStatus(OrderStatus.Confirmed);
+
+        // Act
+        var result = order.UpdateStatus(OrderStatus.Shipped);
+
+        // Assert
+        result.IsFailure.ShouldBeTrue();
+    }
 }

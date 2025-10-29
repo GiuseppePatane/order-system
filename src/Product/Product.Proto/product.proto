@@ -24,6 +24,12 @@ service ProductService {
   // Deletes a product by its ID
   rpc DeleteProduct (DeleteProductRequest) returns (DeleteProductResponse);
   
+  // Checks product availability for a given quantity ad lock the stock
+  rpc LockProductStock (UpdateStockRequest) returns (UpdateStockResponse);
+  
+  // Releases previously locked product stock
+  rpc ReleaseProductStock (UpdateStockRequest) returns (UpdateStockResponse);
+  
 }
 
 // ========== Get Product by ID ==========
@@ -117,20 +123,24 @@ message DeleteProductData {
 
 // ========== Update Stock ==========
 
+// Request to update stock (lock or release)
+message UpdateStockRequest {
+  string product_id = 1;
+  int32 quantity = 2;
+}
 
-// Response for availability check
-message CheckAvailabilityResponse {
+// Response for stock update
+message UpdateStockResponse {
   oneof result {
-    AvailabilityData data = 1;
+    StockUpdateData data = 1;
     shared.ErrorResponse error = 2;
   }
 }
 
-// Availability check data
-message AvailabilityData {
-  bool is_available = 1;
-  int32 available_quantity = 2;
-  int32 requested_quantity = 3;
+// Stock update data
+message StockUpdateData {
+  string product_id = 1;
+  int32 updated_stock = 2;
 }
 
 // ========== Product Data Model ==========

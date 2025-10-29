@@ -1,7 +1,10 @@
+using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Product.Application.Commands.CreateProduct;
 using Product.Application.Commands.DeleteProduct;
 using Product.Application.Commands.UpdateProduct;
+using Product.Application.Commands.LockProductStock;
+using Product.Application.Commands.ReleaseProductStock;
 using Product.Core.Repositories;
 using Products;
 using Shared.Core.Domain.Errors;
@@ -16,18 +19,26 @@ public class ProductGrpcService : ProductService.ProductServiceBase
     private readonly CreateProductHandler _createProductHandler;
     private readonly UpdateProductHandler _updateProductHandler;
     private readonly DeleteProductHandler _deleteProductHandler;
+    private readonly LockProductStockHandler _lockProductStockHandler;
+    private readonly ReleaseProductStockHandler _releaseProductStockHandler;
     private readonly GrpcServiceBase<ProductGrpcService> _baseService;
 
     public ProductGrpcService(
         ILogger<ProductGrpcService> logger,
         IProductReadOnlyRepository productRepository,
-        CreateProductHandler createProductHandler, UpdateProductHandler updateProductHandler, DeleteProductHandler deleteProductHandler)
+        CreateProductHandler createProductHandler, 
+        UpdateProductHandler updateProductHandler, 
+        DeleteProductHandler deleteProductHandler,
+        LockProductStockHandler lockProductStockHandler,
+        ReleaseProductStockHandler releaseProductStockHandler)
     {
         _logger = logger;
         _productRepository = productRepository;
         _createProductHandler = createProductHandler;
         _updateProductHandler = updateProductHandler;
         _deleteProductHandler = deleteProductHandler;
+        _lockProductStockHandler = lockProductStockHandler;
+        _releaseProductStockHandler = releaseProductStockHandler;
         _baseService = new InternalGrpcServiceBase(logger);
     }
 
@@ -67,16 +78,7 @@ public class ProductGrpcService : ProductService.ProductServiceBase
             var product = productResult.Value;
             return new ProductResponse
             {
-                Data = new ProductData
-                {
-                    ProductId = product.Id.ToString(),
-                    Name = product.Name,
-                    Description = product.Description,
-                    Price = (double)product.Price,
-                    Stock = product.Stock,
-                    Sku = product.Sku,
-                    CategoryId = product.CategoryId.ToString(),
-                },
+                Data = product.ToProductDataResponse(),
             };
         }
         catch (Exception ex)
@@ -178,7 +180,7 @@ public class ProductGrpcService : ProductService.ProductServiceBase
             return new ProductResponse
             {
                 Error = _baseService.CreateInvalidArgumentError(
-                    "CategoryId",
+                    "ProductId",
                     "invalid or missing GUID"
                 ),
             };
@@ -318,27 +320,132 @@ public class ProductGrpcService : ProductService.ProductServiceBase
                  Items =
                  {
                      result.Value.Items != null ?
-                     result.Value.Items.Select(p => new ProductData
-                     {
-                         ProductId = p.Id.ToString(),
-                         Name = p.Name,
-                         Description = p.Description,
-                         Price = (double)p.Price,
-                         Stock = p.Stock,
-                         Sku = p.Sku,
-                         CategoryId = p.CategoryId.ToString(),
-                     }) : []
+                     result.Value.Items.Select(p => p.ToProductDataResponse()) : []
                  }
              }
          };
     }
-            
-    
+
+    public override async Task<UpdateStockResponse> LockProductStock(
+        UpdateStockRequest request,
+        ServerCallContext context)
+    {
+        try
+        {
+            if (!_baseService.IsValidGuid(request.ProductId, out var productId))
+            {
+                return new UpdateStockResponse
+                {
+                    Error = _baseService.CreateInvalidArgumentError("ProductId", "Invalid product ID")
+                };
+            }
+
+            var command = new LockProductStockCommand(productId, request.Quantity);
+            var result = await _lockProductStockHandler.Handle(command, context.CancellationToken);
+
+            if (result.IsFailure)
+            {
+                var error = result.Error;
+
+                if (error is ValidationError ve)
+                    return new UpdateStockResponse { Error = _baseService.CreateInvalidArgumentError(ve.FieldName, ve.Reason) };
+
+                if (error is NotFoundError nf)
+                    return new UpdateStockResponse { Error = _baseService.CreateNotFoundError(nf.EntityType, nf.EntityId) };
+
+                return new UpdateStockResponse { Error = _baseService.CreateInternalError() };
+            }
+
+            return new UpdateStockResponse
+            {
+                Data = new StockUpdateData
+                {
+                    ProductId = result.Value.ProductId.ToString(),
+                    UpdatedStock = result.Value.UpdatedStock
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error locking product stock for {ProductId}", request.ProductId);
+            return new UpdateStockResponse { Error = _baseService.CreateInternalError() };
+        }
+    }
+
+    public override async Task<UpdateStockResponse> ReleaseProductStock(
+        UpdateStockRequest request,
+        ServerCallContext context)
+    {
+        try
+        {
+            if (!_baseService.IsValidGuid(request.ProductId, out var productId))
+            {
+                return new UpdateStockResponse
+                {
+                    Error = _baseService.CreateInvalidArgumentError("ProductId", "Invalid product ID")
+                };
+            }
+
+            var command = new ReleaseProductStockCommand(productId, request.Quantity);
+            var result = await _releaseProductStockHandler.Handle(command, context.CancellationToken);
+
+            if (result.IsFailure)
+            {
+                var error = result.Error;
+
+                if (error is ValidationError ve)
+                    return new UpdateStockResponse { Error = _baseService.CreateInvalidArgumentError(ve.FieldName, ve.Reason) };
+
+                if (error is NotFoundError nf)
+                    return new UpdateStockResponse { Error = _baseService.CreateNotFoundError(nf.EntityType, nf.EntityId) };
+
+                return new UpdateStockResponse { Error = _baseService.CreateInternalError() };
+            }
+
+            return new UpdateStockResponse
+            {
+                Data = new StockUpdateData
+                {
+                    ProductId = result.Value.ProductId.ToString(),
+                    UpdatedStock = result.Value.UpdatedStock
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error releasing product stock for {ProductId}", request.ProductId);
+            return new UpdateStockResponse { Error = _baseService.CreateInternalError() };
+        }
+    }
+
+  
 
     // Helper class to access protected methods
     private class InternalGrpcServiceBase : GrpcServiceBase<ProductGrpcService>
     {
         public InternalGrpcServiceBase(ILogger<ProductGrpcService> logger)
             : base(logger) { }
+    }
+
+
+}
+
+public static class Mapping
+{
+    public static ProductData ToProductDataResponse(this Core.Domain.Product product)
+    {
+        return new ProductData
+        {
+            ProductId = product.Id.ToString(),
+            Name = product.Name,
+            Description = product.Description,
+            Price = (double)product.Price,
+            Stock = product.Stock,
+            Sku = product.Sku,
+            CategoryId = product.CategoryId.ToString(),
+            IsActive = product.IsActive,
+            CreatedAt = product.CreatedAt.ToTimestamp(),
+            UpdatedAt = product.UpdatedAt?.ToTimestamp()
+        };
     }
 }

@@ -9,13 +9,16 @@ namespace ApiGateway.Api.Controllers;
 public class OrdersController : ControllerBase
 {
     private readonly IOrderOrchestrationService _orderOrchestration;
+    private readonly IOrderServiceClient _orderClient;
     private readonly ILogger<OrdersController> _logger;
 
     public OrdersController(
         IOrderOrchestrationService orderOrchestration,
+        IOrderServiceClient orderClient,
         ILogger<OrdersController> logger)
     {
         _orderOrchestration = orderOrchestration;
+        _orderClient = orderClient;
         _logger = logger;
     }
 
@@ -153,6 +156,90 @@ public class OrdersController : ControllerBase
         return MapErrorToProblemDetails(result.Error!);
     }
 
+    /*
+     Add an item to an existing order (only for pending orders)
+
+     curl example:
+     curl -X POST http://localhost:5000/api/orders/{orderId}/items \
+       -H "Content-Type: application/json" \
+       -d '{
+         "productId": "33333333-3333-3333-3333-333333333333",
+         "quantity": 1,
+         "unitPrice": 19.99
+       }'
+    */
+    [HttpPost("{orderId}/items")]
+    [ProducesResponseType(typeof(AddOrderItemResultDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> AddOrderItem(string orderId, [FromBody] AddOrderItemRequestDto request)
+    {
+        _logger.LogInformation("Adding item to order {OrderId}", orderId);
+
+        var result = await _orderClient.AddOrderItem(orderId, request);
+
+        if (result.IsSuccess && result.Data != null)
+        {
+            return Ok(result.Data);
+        }
+
+        return MapErrorToProblemDetails(result.Error!);
+    }
+
+    /*
+     Remove an item from an existing order (only for pending orders)
+
+     curl example:
+     curl -X DELETE http://localhost:5000/api/orders/{orderId}/items/{itemId}
+    */
+    [HttpDelete("{orderId}/items/{itemId}")]
+    [ProducesResponseType(typeof(RemoveOrderItemResultDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> RemoveOrderItem(string orderId, string itemId)
+    {
+        _logger.LogInformation("Removing item {ItemId} from order {OrderId}", itemId, orderId);
+
+        var result = await _orderClient.RemoveOrderItem(orderId, itemId);
+
+        if (result.IsSuccess && result.Data != null)
+        {
+            return Ok(result.Data);
+        }
+
+        return MapErrorToProblemDetails(result.Error!);
+    }
+
+    /*
+     Update the quantity of an order item (only for pending orders)
+
+     curl example:
+     curl -X PATCH http://localhost:5000/api/orders/{orderId}/items/{itemId}/quantity \
+       -H "Content-Type: application/json" \
+       -d '{"newQuantity": 5}'
+    */
+    [HttpPatch("{orderId}/items/{itemId}/quantity")]
+    [ProducesResponseType(typeof(UpdateOrderItemQuantityResultDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> UpdateOrderItemQuantity(string orderId, string itemId, [FromBody] UpdateItemQuantityRequest request)
+    {
+        _logger.LogInformation("Updating item {ItemId} quantity in order {OrderId} to {NewQuantity}",
+            itemId, orderId, request.NewQuantity);
+
+        var result = await _orderClient.UpdateOrderItemQuantity(orderId, itemId, request.NewQuantity);
+
+        if (result.IsSuccess && result.Data != null)
+        {
+            return Ok(result.Data);
+        }
+
+        return MapErrorToProblemDetails(result.Error!);
+    }
+
     private IActionResult MapErrorToProblemDetails(ApiGateway.Core.Common.ErrorInfo error)
     {
         var problemDetails = new ProblemDetails
@@ -190,4 +277,5 @@ public class OrdersController : ControllerBase
 
 public record CancelOrderRequest(string? Reason);
 public record UpdateOrderStatusRequest(string Status);
+public record UpdateItemQuantityRequest(int NewQuantity);
 

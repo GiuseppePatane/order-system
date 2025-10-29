@@ -13,4 +13,8 @@ public interface IProductServiceClient
     Task<ServiceResult<ProductDto>> UpdateProduct(UpdateProductRequestDto request);
 
     Task<ServiceResult<DeleteProductResultDto>> DeleteProduct(string productId);
+
+    Task<ServiceResult<StockUpdateDto>> LockProductStock(string productId, int quantity);
+
+    Task<ServiceResult<StockUpdateDto>> ReleaseProductStock(string productId, int quantity);
 }

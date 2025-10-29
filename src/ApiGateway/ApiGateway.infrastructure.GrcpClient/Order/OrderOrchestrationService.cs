@@ -28,6 +28,12 @@ public class OrderOrchestrationService : IOrderOrchestrationService
         _orderClient = orderClient;
     }
 
+    /// <summary>
+    ///  This proces should be transactional, but for simplicity, we are not implementing distributed transactions saga here.
+    /// </summary>
+    /// <param name="request"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
     public async Task<ServiceResult<OrderDto>> CreateOrderAsync(
         CreateOrderRequestDto request, 
         CancellationToken cancellationToken = default)
@@ -46,40 +52,50 @@ public class OrderOrchestrationService : IOrderOrchestrationService
 
         _logger.LogInformation("User {UserId} validated successfully", request.UserId);
 
-       
-        var productValidationTasks = request.Items.Select(async item =>
+        // Step 2: Validate products, get prices, and lock stock
+        var orderItemsWithPrices = new List<OrderItemWithPriceDto>();
+
+        foreach (var item in request.Items)
         {
+            // Get product details to retrieve the current price
             var productResult = await _productClient.GetProductById(item.ProductId.ToString());
-            
             if (!productResult.IsSuccess || productResult.Data == null)
             {
-                return (Success: false, 
-                        Error: $"Product {item.ProductId} not found",
-                        Item: item,
-                        Product: (ProductDto?)null);
+                _logger.LogWarning("Product {ProductId} not found", item.ProductId);
+                return ServiceResult<OrderDto>.Failure(
+                    productResult.Error ?? new ErrorInfo { Code = "PRODUCT_NOT_FOUND", Message = $"Product with ID {item.ProductId} does not exist" });
             }
 
-            var product = productResult.Data;
-            
+            // Lock the stock
+            var lockResult = await _productClient.LockProductStock(item.ProductId.ToString(), item.Quantity);
+            if (!lockResult.IsSuccess)
+            {
+                _logger.LogWarning("Failed to lock stock for product {ProductId}: {Error}", item.ProductId, lockResult.Error?.Message);
+                return ServiceResult<OrderDto>.Failure(
+                    lockResult.Error ?? new ErrorInfo { Code = "STOCK_LOCK_FAILED", Message = $"Failed to lock stock for product {item.ProductId}" });
+            }
 
-            return (Success: true, Error: string.Empty, Item: item, Product: product);
-        }).ToList();
-
-        var validationResults = await Task.WhenAll(productValidationTasks);
-
-        // Check if any product validation failed
-        var failedValidation = validationResults.FirstOrDefault(r => !r.Success);
-        if (failedValidation.Success == false)
-        {
-            _logger.LogWarning("Product validation failed: {Error}", failedValidation.Error);
-            return ServiceResult<OrderDto>.Failure(
-                new ErrorInfo { Code = "PRODUCT_VALIDATION_FAILED", Message = failedValidation.Error });
+            // Store item with the price from the server
+            orderItemsWithPrices.Add(new OrderItemWithPriceDto
+            {
+                ProductId = item.ProductId,
+                Quantity = item.Quantity,
+                UnitPrice = (decimal)productResult.Data.Price
+            });
         }
 
         _logger.LogInformation("All {Count} products validated successfully", request.Items.Count);
 
-        // Step 3: Create the order via Order service
-        var orderResult = await _orderClient.CreateOrder(request);
+        // Step 3: Create the order via Order service with server-side prices
+        var orderRequestWithPrices = new CreateOrderRequestWithPricesDto
+        {
+            UserId = request.UserId,
+            ShippingAddressId = request.ShippingAddressId,
+            BillingAddressId = request.BillingAddressId,
+            Items = orderItemsWithPrices
+        };
+
+        var orderResult = await _orderClient.CreateOrder(orderRequestWithPrices);
         
         if (!orderResult.IsSuccess || orderResult.Data == null)
         {
@@ -89,11 +105,9 @@ public class OrderOrchestrationService : IOrderOrchestrationService
         }
 
         _logger.LogInformation("Order {OrderId} created successfully", orderResult.Data.OrderId);
+        
 
-        // Step 4: Enrich order data with product names (optional but useful for client)
-        var enrichedOrder = await EnrichOrderWithProductNames(orderResult.Data, validationResults);
-
-        return ServiceResult<OrderDto>.Success(enrichedOrder);
+        return ServiceResult<OrderDto>.Success(orderResult.Data);
     }
 
     public Task<ServiceResult<OrderDto>> GetOrderByIdAsync(string orderId, CancellationToken cancellationToken = default)
@@ -115,24 +129,7 @@ public class OrderOrchestrationService : IOrderOrchestrationService
     {
         throw new NotImplementedException();
     }
-
-
-    private Task<OrderDto> EnrichOrderWithProductNames(
-        OrderDto order, 
-        IEnumerable<(bool Success, string Error, OrderItemDto Item, ProductDto? Product)> validationResults)
-    {
-        foreach (var item in order.Items)
-        {
-            var valueTuples = validationResults as (bool Success, string Error, OrderItemDto Item, ProductDto Product)[] ?? validationResults.ToArray();
-            var productInfo = valueTuples.FirstOrDefault(v => v.Item.ProductId.ToString() == item.ProductId);
-            if (productInfo.Product != null)
-            {
-                item.ProductName = productInfo.Product.Name;
-            }
-        }
-
-        return Task.FromResult(order);
-    }
+    
 
     private async Task<OrderDto> EnrichOrderWithProductNamesFromIds(OrderDto order)
     {

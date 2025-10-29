@@ -199,7 +199,13 @@ public class ProductServiceGrpcClient : IProductServiceClient
             ProductId = data.ProductId,
             Name = data.Name,
             Description = data.Description,
-            Price = data.Price
+            Price = data.Price,
+            Stock = data.Stock,
+            Sku = data.Sku,
+            CategoryId = data.CategoryId,
+            IsActive = data.IsActive,
+            CreatedAt = data.CreatedAt.ToDateTime(),
+            UpdatedAt = data.UpdatedAt == null ? null : data.UpdatedAt.ToDateTime()
         };
     }
 
@@ -222,5 +228,115 @@ public class ProductServiceGrpcClient : IProductServiceClient
             PageSize = data.PageSize,
             TotalCount = data.TotalCount
         };
+    }
+
+    public async Task<ServiceResult<StockUpdateDto>> LockProductStock(string productId, int quantity)
+    {
+        try
+        {
+            _logger.LogInformation("Calling gRPC service to lock stock for product {ProductId}, quantity: {Quantity}", 
+                productId, quantity);
+
+            var request = new UpdateStockRequest
+            {
+                ProductId = productId,
+                Quantity = quantity
+            };
+
+            var response = await _grpcClient.LockProductStockAsync(request);
+
+            return response.ResultCase switch
+            {
+                UpdateStockResponse.ResultOneofCase.Data => ServiceResult<StockUpdateDto>.Success(
+                    new StockUpdateDto
+                    {
+                        ProductId = response.Data.ProductId,
+                        UpdatedStock = response.Data.UpdatedStock
+                    }),
+                UpdateStockResponse.ResultOneofCase.Error => ServiceResult<StockUpdateDto>.Failure(
+                    MapToErrorInfo(response.Error)),
+                _ => ServiceResult<StockUpdateDto>.Failure(new ErrorInfo
+                {
+                    Code = "EMPTY_RESPONSE",
+                    Message = "The gRPC service returned an empty response"
+                })
+            };
+        }
+        catch (RpcException ex)
+        {
+            _logger.LogError(ex, "gRPC call failed for LockProductStock - ProductId: {ProductId}, Quantity: {Quantity}", 
+                productId, quantity);
+
+            return ServiceResult<StockUpdateDto>.Failure(new ErrorInfo
+            {
+                Code = ex.StatusCode.ToString(),
+                Message = $"gRPC call failed: {ex.Message}"
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error calling LockProductStock - ProductId: {ProductId}", productId);
+
+            return ServiceResult<StockUpdateDto>.Failure(new ErrorInfo
+            {
+                Code = "UNEXPECTED_ERROR",
+                Message = $"An unexpected error occurred: {ex.Message}"
+            });
+        }
+    }
+
+    public async Task<ServiceResult<StockUpdateDto>> ReleaseProductStock(string productId, int quantity)
+    {
+        try
+        {
+            _logger.LogInformation("Calling gRPC service to release stock for product {ProductId}, quantity: {Quantity}", 
+                productId, quantity);
+
+            var request = new UpdateStockRequest
+            {
+                ProductId = productId,
+                Quantity = quantity
+            };
+
+            var response = await _grpcClient.ReleaseProductStockAsync(request);
+
+            return response.ResultCase switch
+            {
+                UpdateStockResponse.ResultOneofCase.Data => ServiceResult<StockUpdateDto>.Success(
+                    new StockUpdateDto
+                    {
+                        ProductId = response.Data.ProductId,
+                        UpdatedStock = response.Data.UpdatedStock
+                    }),
+                UpdateStockResponse.ResultOneofCase.Error => ServiceResult<StockUpdateDto>.Failure(
+                    MapToErrorInfo(response.Error)),
+                _ => ServiceResult<StockUpdateDto>.Failure(new ErrorInfo
+                {
+                    Code = "EMPTY_RESPONSE",
+                    Message = "The gRPC service returned an empty response"
+                })
+            };
+        }
+        catch (RpcException ex)
+        {
+            _logger.LogError(ex, "gRPC call failed for ReleaseProductStock - ProductId: {ProductId}, Quantity: {Quantity}", 
+                productId, quantity);
+
+            return ServiceResult<StockUpdateDto>.Failure(new ErrorInfo
+            {
+                Code = ex.StatusCode.ToString(),
+                Message = $"gRPC call failed: {ex.Message}"
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error calling ReleaseProductStock - ProductId: {ProductId}", productId);
+
+            return ServiceResult<StockUpdateDto>.Failure(new ErrorInfo
+            {
+                Code = "UNEXPECTED_ERROR",
+                Message = $"An unexpected error occurred: {ex.Message}"
+            });
+        }
     }
 }
