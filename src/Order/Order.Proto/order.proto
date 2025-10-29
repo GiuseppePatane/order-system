@@ -1,0 +1,136 @@
+syntax = "proto3";
+
+import "common.proto";
+import "google/protobuf/timestamp.proto";
+
+option csharp_namespace = "Order.Protos";
+
+package orders;
+
+// Order service
+service OrderService {
+  // Retrieves an order by ID
+  rpc GetOrder (GetOrderRequest) returns (OrderResponse);
+
+  // Retrieves all orders for a user
+  rpc GetOrdersByUser (GetOrdersByUserRequest) returns (GetOrdersResponse);
+
+  // Retrieves paginated orders for a user
+  rpc GetPagedOrdersByUser (GetPagedOrdersRequest) returns (GetPagedOrdersResponse);
+
+  // Creates a new order
+  rpc CreateOrder (CreateOrderRequest) returns (OrderResponse);
+
+  // Updates order status
+  rpc UpdateOrderStatus (UpdateOrderStatusRequest) returns (OrderResponse);
+
+  // Cancels an order
+  rpc CancelOrder (CancelOrderRequest) returns (OrderResponse);
+}
+
+// ===== Get order ======
+message GetOrderRequest {
+  string order_id = 1;
+}
+
+message OrderResponse {
+  oneof result {
+    OrderData data = 1;
+    shared.ErrorResponse error = 2;
+  }
+}
+
+// ===== Get orders by user ======
+message GetOrdersByUserRequest {
+  string user_id = 1;
+}
+
+message GetOrdersResponse {
+  oneof result {
+    OrderListData data = 1;
+    shared.ErrorResponse error = 2;
+  }
+}
+
+message OrderListData {
+  repeated OrderData items = 1;
+}
+
+// ===== Get paged orders ======
+message GetPagedOrdersRequest {
+  string user_id = 1;
+  int32 page_number = 2;
+  int32 page_size = 3;
+  optional OrderStatus status = 4;
+}
+
+message GetPagedOrdersResponse {
+  oneof result {
+    PagedOrderListData data = 1;
+    shared.ErrorResponse error = 2;
+  }
+}
+
+message PagedOrderListData {
+  repeated OrderData items = 1;
+  int32 page_number = 2;
+  int32 page_size = 3;
+  int32 total_count = 4;
+}
+
+// ===== Create / Update / Cancel ======
+message CreateOrderRequest {
+  string user_id = 1;
+  repeated OrderItemInput items = 2;
+  string shipping_address_id = 3;
+  optional string billing_address_id = 4;
+}
+
+message OrderItemInput {
+  string product_id = 1;
+  int32 quantity = 2;
+  double unit_price = 3;
+}
+
+message UpdateOrderStatusRequest {
+  string order_id = 1;
+  OrderStatus status = 2;
+}
+
+message CancelOrderRequest {
+  string order_id = 1;
+  optional string reason = 2;
+}
+
+// ===== Order status enum ======
+enum OrderStatus {
+  ORDER_STATUS_UNSPECIFIED = 0;
+  ORDER_STATUS_PENDING = 1;
+  ORDER_STATUS_CONFIRMED = 2;
+  ORDER_STATUS_PROCESSING = 3;
+  ORDER_STATUS_SHIPPED = 4;
+  ORDER_STATUS_DELIVERED = 5;
+  ORDER_STATUS_CANCELLED = 6;
+}
+
+// ===== Order data model ======
+message OrderData {
+  string order_id = 1;
+  string user_id = 2;
+  repeated OrderItemData items = 3;
+  string shipping_address_id = 4;
+  optional string billing_address_id = 5;
+  double total_amount = 6;
+  OrderStatus status = 7;
+  google.protobuf.Timestamp created_at = 8;
+  optional google.protobuf.Timestamp updated_at = 9;
+  optional string cancellation_reason = 10;
+}
+
+message OrderItemData {
+  string order_item_id = 1;
+  string product_id = 2;
+  int32 quantity = 3;
+  double unit_price = 4;
+  double total_price = 5;
+}
