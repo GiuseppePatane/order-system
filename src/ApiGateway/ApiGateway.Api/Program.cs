@@ -38,6 +38,7 @@ builder.Services.AddSwaggerGen(options =>
 // Configure gRPC client with service discovery and resilience
 builder.Services.AddProductGrpcClient("http://product-grpcservice");
 builder.Services.AddUserGrpcClient("http://user-grpcservice");
+builder.Services.AddAddressGrpcClient("http://address-grpcservice");
 
 
 var app = builder.Build();

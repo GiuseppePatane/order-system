@@ -2,6 +2,7 @@ using Bogus;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using User.Infrastructure.EF;
+using Shared.DataMigrator;
 
 namespace User.DataMigrator;
 
@@ -64,45 +65,30 @@ public static class DbInitializer
     {
         var users = new List<Core.Domain.UserEntity>();
         var faker = new Faker();
-
-        // Create some predefined users with known data
+        
         var predefinedUsers = new[]
         {
-            ("Mario", "Rossi", "mario.rossi@example.com"),
-            ("Giulia", "Bianchi", "giulia.bianchi@example.com"),
-            ("Luca", "Verdi", "luca.verdi@example.com"),
-            ("Anna", "Romano", "anna.romano@example.com"),
-            ("Marco", "Ferrari", "marco.ferrari@example.com"),
-            ("Sofia", "Esposito", "sofia.esposito@example.com"),
-            ("Alessandro", "Ricci", "alessandro.ricci@example.com"),
-            ("Elena", "Moretti", "elena.moretti@example.com"),
-            ("Francesco", "Barbieri", "francesco.barbieri@example.com"),
-            ("Chiara", "Fontana", "chiara.fontana@example.com")
+            (SharedUserIds.MarioRossi, "Mario", "Rossi", "mario.rossi@example.com"),
+            (SharedUserIds.GiuliaBianchi, "Giulia", "Bianchi", "giulia.bianchi@example.com"),
+            (SharedUserIds.LucaVerdi, "Luca", "Verdi", "luca.verdi@example.com"),
+            (SharedUserIds.AnnaRomano, "Anna", "Romano", "anna.romano@example.com"),
+            (SharedUserIds.MarcoFerrari, "Marco", "Ferrari", "marco.ferrari@example.com"),
+            (SharedUserIds.SofiaEsposito, "Sofia", "Esposito", "sofia.esposito@example.com"),
+            (SharedUserIds.AlessandroRicci, "Alessandro", "Ricci", "alessandro.ricci@example.com"),
+            (SharedUserIds.ElenaMoretti, "Elena", "Moretti", "elena.moretti@example.com"),
+            (SharedUserIds.FrancescoBarbieri, "Francesco", "Barbieri", "francesco.barbieri@example.com"),
+            (SharedUserIds.ChiaraFontana, "Chiara", "Fontana", "chiara.fontana@example.com")
         };
 
-        foreach (var (firstName, lastName, email) in predefinedUsers)
+        foreach (var (id, firstName, lastName, email) in predefinedUsers)
         {
-            var result = Core.Domain.UserEntity.Create(firstName, lastName, email);
+            var result = Core.Domain.UserEntity.Create(firstName, lastName, email, id);
             if (result.IsSuccess)
             {
                 users.Add(result.Value);
             }
         }
-
-        // Create additional random users
-        for (int i = 0; i < 40; i++)
-        {
-            var firstName = faker.Name.FirstName();
-            var lastName = faker.Name.LastName();
-            var email = faker.Internet.Email(firstName, lastName);
-
-            var result = Core.Domain.UserEntity.Create(firstName, lastName, email);
-            if (result.IsSuccess)
-            {
-                users.Add(result.Value);
-            }
-        }
-
+        
         return users;
     }
 }

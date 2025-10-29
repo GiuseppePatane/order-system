@@ -9,12 +9,16 @@ var postgres = builder.AddPostgres("postgres")
 
 var productDb = postgres.AddDatabase("productdb");
 var userDb = postgres.AddDatabase("userdb");
+var addressDb = postgres.AddDatabase("addressdb");
 
 var productMigration = builder.AddProject<Projects.Product_DataMigrator>("catalog-migrator")
     .WithReference(productDb);
 
 var userMigration = builder.AddProject<Projects.User_DataMigrator>("user-migrator")
     .WithReference(userDb);
+
+var addressMigration = builder.AddProject<Projects.Address_DataMigrator>("address-migrator")
+    .WithReference(addressDb);
 
 
 var productService = builder.AddProject<Projects.Product_GrpcService>("product-grpcservice")
@@ -25,8 +29,13 @@ var userService = builder.AddProject<Projects.User_GrpcService>("user-grpcservic
     .WithReference(userDb)
     .WaitForCompletion(userMigration);
 
+var addressService = builder.AddProject<Projects.Address_GrpcService>("address-grpcservice")
+    .WithReference(addressDb)
+    .WaitForCompletion(addressMigration);
+
 builder.AddProject<Projects.ApiGateway_Api>("apigateway-api")
     .WithReference(productService)
-    .WithReference(userService);
+    .WithReference(userService)
+    .WithReference(addressService);
 
 builder.Build().Run();

@@ -20,6 +20,8 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\src\Address\Address.DataMigrator\Address.DataMigrator.csproj" />
+      <ProjectReference Include="..\src\Address\Address.GrpcService\Address.GrpcService.csproj" />
       <ProjectReference Include="..\src\ApiGateway\ApiGateway.Api\ApiGateway.Api.csproj" />
       <ProjectReference Include="..\src\Product\Product.DataMigrator\Product.DataMigrator.csproj" />
       <ProjectReference Include="..\src\Product\Product.GrpcService\Product.GrpcService.csproj" />

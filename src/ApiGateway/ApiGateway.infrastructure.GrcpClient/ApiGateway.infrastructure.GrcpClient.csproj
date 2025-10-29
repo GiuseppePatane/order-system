@@ -14,6 +14,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\..\OrderSystem.ServiceDefaults\OrderSystem.ServiceDefaults.csproj" />
+        <ProjectReference Include="..\..\Address\Address.Proto.Client\Address.Proto.Client.csproj" />
         <ProjectReference Include="..\..\Product\Product.Proto.Client\Product.Proto.Client.csproj" />
         <ProjectReference Include="..\..\User\User.Proto.Client\User.Proto.Client.csproj" />
         <ProjectReference Include="..\ApiGateway.Core\ApiGateway.Core.csproj" />

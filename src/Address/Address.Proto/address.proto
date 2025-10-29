@@ -1,0 +1,151 @@
+syntax = "proto3";
+
+import "common.proto";
+import "google/protobuf/timestamp.proto";
+
+option csharp_namespace = "Address.Protos";
+
+package addresses;
+
+// Address service
+service AddressService {
+  // Retrieves an address by ID
+  rpc GetAddress (GetAddressRequest) returns (AddressResponse);
+
+  // Retrieves all addresses for a user
+  rpc GetAddressesByUser (GetAddressesByUserRequest) returns (GetAddressesResponse);
+
+  // Retrieves default address for a user
+  rpc GetDefaultAddress (GetDefaultAddressRequest) returns (AddressResponse);
+
+  // Retrieves paginated addresses for a user
+  rpc GetPagedAddressesByUser (GetPagedAddressesRequest) returns (GetPagedAddressesResponse);
+
+  // Creates a new address
+  rpc CreateAddress (CreateAddressRequest) returns (AddressResponse);
+
+  // Updates an existing address
+  rpc UpdateAddress (UpdateAddressRequest) returns (AddressResponse);
+
+  // Deletes an address
+  rpc DeleteAddress (DeleteAddressRequest) returns (DeleteAddressResponse);
+
+  // Sets an address as default for a user
+  rpc SetDefaultAddress (SetDefaultAddressRequest) returns (AddressResponse);
+}
+
+// ===== Get address ======
+message GetAddressRequest {
+  string address_id = 1;
+}
+
+message AddressResponse {
+  oneof result {
+    AddressData data = 1;
+    shared.ErrorResponse error = 2;
+  }
+}
+
+// ===== Get addresses by user ======
+message GetAddressesByUserRequest {
+  string user_id = 1;
+}
+
+message GetAddressesResponse {
+  oneof result {
+    AddressListData data = 1;
+    shared.ErrorResponse error = 2;
+  }
+}
+
+message AddressListData {
+  repeated AddressData items = 1;
+}
+
+// ===== Get default address ======
+message GetDefaultAddressRequest {
+  string user_id = 1;
+}
+
+// ===== Get paged addresses ======
+message GetPagedAddressesRequest {
+  string user_id = 1;
+  int32 page_number = 2;
+  int32 page_size = 3;
+}
+
+message GetPagedAddressesResponse {
+  oneof result {
+    PagedAddressListData data = 1;
+    shared.ErrorResponse error = 2;
+  }
+}
+
+message PagedAddressListData {
+  repeated AddressData items = 1;
+  int32 page_number = 2;
+  int32 page_size = 3;
+  int32 total_count = 4;
+}
+
+// ===== Create / Update / Delete ======
+message CreateAddressRequest {
+  string user_id = 1;
+  string street = 2;
+  optional string street2 = 3;
+  string city = 4;
+  string state = 5;
+  string postal_code = 6;
+  string country = 7;
+  optional string label = 8;
+  bool is_default = 9;
+}
+
+message UpdateAddressRequest {
+  string address_id = 1;
+  optional string street = 2;
+  optional string street2 = 3;
+  optional string city = 4;
+  optional string state = 5;
+  optional string postal_code = 6;
+  optional string country = 7;
+  optional string label = 8;
+  optional bool is_default = 9;
+}
+
+message DeleteAddressRequest {
+  string address_id = 1;
+}
+
+message DeleteAddressResponse {
+  oneof result {
+    DeleteAddressData data = 1;
+    shared.ErrorResponse error = 2;
+  }
+}
+
+message DeleteAddressData {
+  bool success = 1;
+  string address_id = 2;
+}
+
+// ===== Set default address ======
+message SetDefaultAddressRequest {
+  string address_id = 1;
+}
+
+// ===== Address data model ======
+message AddressData {
+  string address_id = 1;
+  string user_id = 2;
+  string street = 3;
+  optional string street2 = 4;
+  string city = 5;
+  string state = 6;
+  string postal_code = 7;
+  string country = 8;
+  optional string label = 9;
+  bool is_default = 10;
+  google.protobuf.Timestamp created_at = 11;
+  optional google.protobuf.Timestamp updated_at = 12;
+}
