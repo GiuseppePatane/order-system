@@ -18,7 +18,7 @@ public interface IOrderServiceClient
     Task<ServiceResult<OrderDto>> UpdateOrderStatus(string orderId, string newStatus);
 
     // Item management methods
-    Task<ServiceResult<AddOrderItemResultDto>> AddOrderItem(string orderId, AddOrderItemRequestDto request);
+    Task<ServiceResult<AddOrderItemResultDto>> AddOrderItem(string orderId, AddOrderItemWithPriceDto request);
     Task<ServiceResult<RemoveOrderItemResultDto>> RemoveOrderItem(string orderId, string itemId);
     Task<ServiceResult<UpdateOrderItemQuantityResultDto>> UpdateOrderItemQuantity(string orderId, string itemId, int newQuantity);
 }

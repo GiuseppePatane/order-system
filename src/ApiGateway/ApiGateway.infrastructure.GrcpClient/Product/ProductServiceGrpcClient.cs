@@ -339,4 +339,92 @@ public class ProductServiceGrpcClient : IProductServiceClient
             });
         }
     }
+
+    public async Task<ServiceResult<PagedCategoriesDto>> GetCategories(GetCategoriesRequestDto requestDto)
+    {
+        try
+        {
+            _logger.LogInformation("Calling gRPC service to get categories - Page: {PageNumber}, Size: {PageSize}",
+                requestDto.PageNumber, requestDto.PageSize);
+
+            var request = new GetCategoriesRequest
+            {
+                PageNumber = requestDto.PageNumber,
+                PageSize = requestDto.PageSize
+            };
+
+            if (requestDto.IsActive.HasValue)
+                request.IsActive = requestDto.IsActive.Value;
+
+            var response = await _grpcClient.GetCategoriesAsync(request);
+
+            return response.ResultCase switch
+            {
+                GetCategoriesResponse.ResultOneofCase.Data => ServiceResult<PagedCategoriesDto>.Success(
+                    MapToPagedCategoriesDto(response.Data)),
+                GetCategoriesResponse.ResultOneofCase.Error => ServiceResult<PagedCategoriesDto>.Failure(
+                    MapToErrorInfo(response.Error)),
+                _ => ServiceResult<PagedCategoriesDto>.Failure(new ErrorInfo
+                {
+                    Code = "EMPTY_RESPONSE",
+                    Message = "The gRPC service returned an empty response"
+                })
+            };
+        }
+        catch (RpcException ex)
+        {
+            _logger.LogError(ex, "gRPC call failed for GetCategories");
+
+            return ServiceResult<PagedCategoriesDto>.Failure(new ErrorInfo
+            {
+                Code = "GRPC_ERROR",
+                Message = $"Failed to communicate with the product service: {ex.Status.Detail}",
+                Details = new Dictionary<string, string>
+                {
+                    ["StatusCode"] = ex.StatusCode.ToString(),
+                    ["Detail"] = ex.Status.Detail ?? string.Empty
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error occurred while calling GetCategories");
+
+            return ServiceResult<PagedCategoriesDto>.Failure(new ErrorInfo
+            {
+                Code = "UNEXPECTED_ERROR",
+                Message = "An unexpected error occurred while retrieving categories",
+                Details = new Dictionary<string, string>
+                {
+                    ["ExceptionType"] = ex.GetType().Name,
+                    ["Message"] = ex.Message
+                }
+            });
+        }
+    }
+
+    private static PagedCategoriesDto MapToPagedCategoriesDto(CategoryListData data)
+    {
+        return new PagedCategoriesDto
+        {
+            Items = data.Items.Select(MapToCategoryDto).ToList(),
+            PageNumber = data.PageNumber,
+            PageSize = data.PageSize,
+            TotalCount = data.TotalCount,
+            TotalPages = data.TotalPages
+        };
+    }
+
+    private static CategoryDto MapToCategoryDto(CategoryData data)
+    {
+        return new CategoryDto
+        {
+            CategoryId = data.CategoryId,
+            Name = data.Name,
+            Description = data.Description,
+            IsActive = data.IsActive,
+            CreatedAt = data.CreatedAt.ToDateTime(),
+            UpdatedAt = data.UpdatedAt == null ? null : data.UpdatedAt.ToDateTime()
+        };
+    }
 }

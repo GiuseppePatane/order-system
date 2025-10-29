@@ -10,7 +10,7 @@ public interface IUserServiceClient
 
     Task<ServiceResult<PagedUsersDto>> GetUsers(GetUsersRequestDto request);
 
-    Task<ServiceResult<UserDto>> UpdateUser(UpdateUserRequestDto request);
+    Task<ServiceResult<UserDto>> UpdateUser(string id, UpdateUserRequestDto request);
 
     Task<ServiceResult<DeleteUserResultDto>> DeleteUser(string userId);
 }

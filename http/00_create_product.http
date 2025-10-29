@@ -14,7 +14,37 @@ Content-Type: application/json
 }
 
 > {% client.global.set("productId", response.body.productId); %}
-### ✅ Saved productId = {{productId}}
+###  Saved productId = {{productId}}
 
 ### 2️⃣ Get Product by ID
 GET {{baseUrl}}/api/products/{{productId}}
+
+### 3️⃣ Get Products (Paginated)
+GET {{baseUrl}}/api/products/1/10
+Accept: application/json
+
+### 3️⃣.1 Get Products (Paginated with filters)
+GET {{baseUrl}}/api/products/1/10?isActive=true&searchTerm=phone
+Accept: application/json
+
+### 4️⃣ Update Product
+PUT {{baseUrl}}/api/products/{{productId}}
+Content-Type: application/json
+
+{
+  "name": "Iphone 19 Pro Max",
+  "description": "The best iphone ever made - Updated edition",
+  "price": 89.90,
+  "stock": 150
+}
+
+### 5️⃣ Delete Product
+DELETE {{baseUrl}}/api/products/{{productId}}
+
+### 6️⃣ Get Categories (Paginated)
+GET {{baseUrl}}/api/products/categories/1/10
+Accept: application/json
+
+### 6️⃣.1 Get Active Categories Only
+GET {{baseUrl}}/api/products/categories/1/10?isActive=true
+Accept: application/json

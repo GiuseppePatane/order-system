@@ -17,4 +17,6 @@ public interface IProductServiceClient
     Task<ServiceResult<StockUpdateDto>> LockProductStock(string productId, int quantity);
 
     Task<ServiceResult<StockUpdateDto>> ReleaseProductStock(string productId, int quantity);
+
+    Task<ServiceResult<PagedCategoriesDto>> GetCategories(GetCategoriesRequestDto request);
 }

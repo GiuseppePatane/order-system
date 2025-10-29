@@ -42,7 +42,7 @@ Content-Type: application/json
   "items": [
     {
       "productId": "{{productId}}",
-      "quantity": 4769
+      "quantity": 19070
     }
   ]
 }
@@ -53,15 +53,12 @@ Content-Type: application/json
 
 ### Add Item to Order
 
-
-
 POST {{baseUrl}}/api/orders/{{orderId}}/items
 Content-Type: application/json
 
 {
   "productId": "{{productId}}",
-  "quantity": 2,
-  "unitPrice": 19.99
+  "quantity": 3
 }
 
 > {% client.global.set("itemId", response.body.itemId); %}
@@ -93,3 +90,9 @@ Content-Type: application/json
 
 ### 6️⃣ Get Order Details
 GET {{baseUrl}}/api/orders/{{orderId}}
+
+### 7️⃣ Get User Orders
+GET {{baseUrl}}/api/orders/user/{{userId}}
+
+### 8️⃣ Remove Item from Order
+DELETE {{baseUrl}}/api/orders/{{orderId}}/items/{{itemId}}

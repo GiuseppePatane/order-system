@@ -177,7 +177,7 @@ public class OrdersController : ControllerBase
     {
         _logger.LogInformation("Adding item to order {OrderId}", orderId);
 
-        var result = await _orderClient.AddOrderItem(orderId, request);
+        var result = await _orderOrchestration.AddOrderItemAsync(orderId, request);
 
         if (result.IsSuccess && result.Data != null)
         {
@@ -256,12 +256,12 @@ public class OrdersController : ControllerBase
 
         var (statusCode, type) = error.Code switch
         {
-            "ORDER_NOT_FOUND" or "USER_NOT_FOUND" => 
+            "ORDER_NOT_FOUND" or "USER_NOT_FOUND" or "PRODUCT_NOT_FOUND" =>
                 (StatusCodes.Status404NotFound, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.4"),
-            "PRODUCT_VALIDATION_FAILED" or "INVALID_ORDER_DATA" => 
+            "PRODUCT_VALIDATION_FAILED" or "INVALID_ORDER_DATA" or "PRODUCT_ALREADY_IN_ORDER" or "STOCK_LOCK_FAILED" =>
                 (StatusCodes.Status400BadRequest, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.1"),
            "INVALID_ARGUMENT" => (StatusCodes.Status400BadRequest, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.1"),
-            "ORDER_CREATION_FAILED" => 
+            "ORDER_CREATION_FAILED" or "ADD_ITEM_FAILED" =>
                 (StatusCodes.Status500InternalServerError, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.6.1"),
             _ => (StatusCodes.Status500InternalServerError, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.6.1")
         };

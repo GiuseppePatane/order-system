@@ -29,7 +29,10 @@ service ProductService {
   
   // Releases previously locked product stock
   rpc ReleaseProductStock (UpdateStockRequest) returns (UpdateStockResponse);
-  
+
+  // Retrieves a paginated list of categories
+  rpc GetCategories (GetCategoriesRequest) returns (GetCategoriesResponse);
+
 }
 
 // ========== Get Product by ID ==========
@@ -157,4 +160,40 @@ message ProductData {
   bool is_active = 8;
   google.protobuf.Timestamp created_at = 9;
   optional google.protobuf.Timestamp updated_at = 10;
+}
+
+// ========== Get Categories (Paginated) ==========
+
+// Request for paginated category list
+message GetCategoriesRequest {
+  int32 page_number = 1;  // Page number (starts from 1)
+  int32 page_size = 2;    // Number of items per page
+  optional bool is_active = 3;  // Optional filter by active status
+}
+
+// Response containing paginated categories
+message GetCategoriesResponse {
+  oneof result {
+    CategoryListData data = 1;
+    shared.ErrorResponse error = 2;
+  }
+}
+
+// Paginated category list data
+message CategoryListData {
+  repeated CategoryData items = 1;
+  int32 page_number = 2;
+  int32 page_size = 3;
+  int32 total_count = 4;
+  int32 total_pages = 5;
+}
+
+// Category data
+message CategoryData {
+  string category_id = 1;
+  string name = 2;
+  string description = 3;
+  bool is_active = 4;
+  google.protobuf.Timestamp created_at = 5;
+  optional google.protobuf.Timestamp updated_at = 6;
 }

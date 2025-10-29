@@ -115,10 +115,9 @@ public class UsersController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> UpdateUser(string id, [FromBody] UpdateUserRequestDto request)
+    public async Task<IActionResult> UpdateUser([FromRoute]string id, [FromBody] UpdateUserRequestDto request)
     {
-        request = request with { UserId = id };
-        var result = await _userServiceClient.UpdateUser(request);
+        var result = await _userServiceClient.UpdateUser(id,request);
         if (result.IsSuccess && result.Data != null)
             return Ok(result.Data);
 

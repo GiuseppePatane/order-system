@@ -29,7 +29,12 @@ public class Product
 
     public DateTime? UpdatedAt { get; private set; }
 
-  
+    /// <summary>
+    /// Concurrency token for optimistic locking
+    /// </summary>
+    public byte[] RowVersion { get; private set; } = Array.Empty<byte>();
+
+
     public Category? Category { get; set; }
 
     // Ef Core constructor

@@ -44,9 +44,18 @@ public class OrderItemWithPriceDto
 // ===== Item Management DTOs =====
 
 /// <summary>
-/// Request to add an item to an existing order
+/// Request to add an item to an existing order (from client - no price for security)
 /// </summary>
 public class AddOrderItemRequestDto
+{
+    public Guid ProductId { get; set; }
+    public int Quantity { get; set; }
+}
+
+/// <summary>
+/// Internal request with server-validated price
+/// </summary>
+public class AddOrderItemWithPriceDto
 {
     public Guid ProductId { get; set; }
     public int Quantity { get; set; }

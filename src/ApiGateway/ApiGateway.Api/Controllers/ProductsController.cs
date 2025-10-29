@@ -149,6 +149,33 @@ public class ProductsController : ControllerBase
         return MapErrorToProblemDetails(result.Error!);
     }
 
+    /// <summary>
+    /// Retrieves a paginated list of categories
+    /// </summary>
+    /// <param name="pageNumber">Page number (default: 1)</param>
+    /// <param name="pageSize">Page size (default: 10, max: 100)</param>
+    /// <param name="isActive">Optional filter for active categories</param>
+    /// <returns>A paginated list of categories</returns>
+    /// <response code="200">Returns the paginated category list</response>
+    [HttpGet("categories/{pageNumber}/{pageSize}")]
+    [ProducesResponseType(typeof(PagedCategoriesDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> GetCategories([FromRoute] int pageNumber = 1, [FromRoute] int pageSize = 10, [FromQuery] bool? isActive = null)
+    {
+        var request = new GetCategoriesRequestDto
+        {
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+            IsActive = isActive
+        };
+
+        var result = await _productServiceClient.GetCategories(request);
+        if (result.IsSuccess && result.Data != null)
+            return Ok(result.Data);
+
+        return MapErrorToProblemDetails(result.Error!);
+    }
+
     private IActionResult MapErrorToProblemDetails(ErrorInfo error)
     {
         var problemDetails = new ProblemDetails

@@ -16,6 +16,7 @@ public class ProductGrpcService : ProductService.ProductServiceBase
 {
     private readonly ILogger<ProductGrpcService> _logger;
     private readonly IProductReadOnlyRepository _productRepository;
+    private readonly ICategoryReadOnlyRepository _categoryRepository;
     private readonly CreateProductHandler _createProductHandler;
     private readonly UpdateProductHandler _updateProductHandler;
     private readonly DeleteProductHandler _deleteProductHandler;
@@ -26,14 +27,16 @@ public class ProductGrpcService : ProductService.ProductServiceBase
     public ProductGrpcService(
         ILogger<ProductGrpcService> logger,
         IProductReadOnlyRepository productRepository,
-        CreateProductHandler createProductHandler, 
-        UpdateProductHandler updateProductHandler, 
+        ICategoryReadOnlyRepository categoryRepository,
+        CreateProductHandler createProductHandler,
+        UpdateProductHandler updateProductHandler,
         DeleteProductHandler deleteProductHandler,
         LockProductStockHandler lockProductStockHandler,
         ReleaseProductStockHandler releaseProductStockHandler)
     {
         _logger = logger;
         _productRepository = productRepository;
+        _categoryRepository = categoryRepository;
         _createProductHandler = createProductHandler;
         _updateProductHandler = updateProductHandler;
         _deleteProductHandler = deleteProductHandler;
@@ -418,7 +421,50 @@ public class ProductGrpcService : ProductService.ProductServiceBase
         }
     }
 
-  
+    public override async Task<GetCategoriesResponse> GetCategories(
+        GetCategoriesRequest request,
+        ServerCallContext context)
+    {
+        try
+        {
+            bool? isActive = null;
+            if (request.HasIsActive)
+            {
+                isActive = request.IsActive;
+            }
+
+            var result = await _categoryRepository.GetPagedAsync(
+                request.PageNumber,
+                request.PageSize,
+                isActive,
+                context.CancellationToken
+            );
+
+            return new GetCategoriesResponse
+            {
+                Data = new CategoryListData
+                {
+                    TotalCount = result.TotalCount,
+                    PageNumber = result.PageNumber,
+                    PageSize = result.PageSize,
+                    TotalPages = result.TotalPages,
+                    Items =
+                    {
+                        result.Items != null ?
+                        result.Items.Select(c => c.ToCategoryDataResponse()) : []
+                    }
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving categories");
+            return new GetCategoriesResponse
+            {
+                Error = _baseService.CreateInternalError()
+            };
+        }
+    }
 
     // Helper class to access protected methods
     private class InternalGrpcServiceBase : GrpcServiceBase<ProductGrpcService>
@@ -446,6 +492,19 @@ public static class Mapping
             IsActive = product.IsActive,
             CreatedAt = product.CreatedAt.ToTimestamp(),
             UpdatedAt = product.UpdatedAt?.ToTimestamp()
+        };
+    }
+
+    public static CategoryData ToCategoryDataResponse(this Core.Domain.Category category)
+    {
+        return new CategoryData
+        {
+            CategoryId = category.Id.ToString(),
+            Name = category.Name,
+            Description = category.Description,
+            IsActive = category.IsActive,
+            CreatedAt = category.CreatedAt.ToTimestamp(),
+            UpdatedAt = category.UpdatedAt?.ToTimestamp()
         };
     }
 }

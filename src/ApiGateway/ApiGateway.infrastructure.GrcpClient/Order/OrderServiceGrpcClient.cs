@@ -238,7 +238,7 @@ public class OrderServiceGrpcClient : IOrderServiceClient
         };
     }
 
-    public async Task<ServiceResult<AddOrderItemResultDto>> AddOrderItem(string orderId, AddOrderItemRequestDto request)
+    public async Task<ServiceResult<AddOrderItemResultDto>> AddOrderItem(string orderId, AddOrderItemWithPriceDto request)
     {
         try
         {

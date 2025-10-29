@@ -24,3 +24,25 @@ GET {{baseUrl}}/api/addresses/{{addressId}}
 
 ### 3️⃣ Get Default Address for User
 GET {{baseUrl}}/api/addresses/user/{{userId}}/default
+
+### 4️⃣ Get All Addresses by User
+GET {{baseUrl}}/api/addresses/user/{{userId}}
+
+### 5️⃣ Get Paged Addresses by User
+GET {{baseUrl}}/api/addresses/user/{{userId}}/paged/1/10
+
+### 6️⃣ Update Address
+PUT {{baseUrl}}/api/addresses/{{addressId}}
+Content-Type: application/json
+
+{
+  "street": "Via Roma 123",
+  "city": "Palermo",
+  "state": "PA",
+  "postalCode": "90100",
+  "country": "IT",
+  "label": "Casa Updated"
+}
+
+### 7️⃣ Set Address as Default
+PATCH {{baseUrl}}/api/addresses/{{addressId}}/set-default

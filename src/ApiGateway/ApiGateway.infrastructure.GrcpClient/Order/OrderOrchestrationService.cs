@@ -110,26 +110,172 @@ public class OrderOrchestrationService : IOrderOrchestrationService
         return ServiceResult<OrderDto>.Success(orderResult.Data);
     }
 
-    public Task<ServiceResult<OrderDto>> GetOrderByIdAsync(string orderId, CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<OrderDto>> GetOrderByIdAsync(string orderId, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        _logger.LogInformation("Getting order {OrderId}", orderId);
+
+        var orderResult = await _orderClient.GetOrderById(orderId);
+
+        if (!orderResult.IsSuccess || orderResult.Data == null)
+        {
+            _logger.LogWarning("Order {OrderId} not found", orderId);
+            return ServiceResult<OrderDto>.Failure(
+                orderResult.Error ?? new ErrorInfo { Code = "ORDER_NOT_FOUND", Message = $"Order with ID {orderId} not found" });
+        }
+
+        // Enrich order with product names
+        var enrichedOrder = await EnrichOrderWithProductNamesFromIds(orderResult.Data);
+
+        _logger.LogInformation("Order {OrderId} retrieved successfully", orderId);
+        return ServiceResult<OrderDto>.Success(enrichedOrder);
     }
 
-    public Task<ServiceResult<List<OrderDto>>> GetUserOrdersAsync(string userId, CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<List<OrderDto>>> GetUserOrdersAsync(string userId, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        _logger.LogInformation("Getting orders for user {UserId}", userId);
+
+        var ordersResult = await _orderClient.GetOrdersByUserId(userId);
+
+        if (!ordersResult.IsSuccess || ordersResult.Data == null)
+        {
+            _logger.LogWarning("Failed to get orders for user {UserId}", userId);
+            return ServiceResult<List<OrderDto>>.Failure(
+                ordersResult.Error ?? new ErrorInfo { Code = "ORDERS_RETRIEVAL_FAILED", Message = $"Failed to get orders for user {userId}" });
+        }
+
+        // Enrich each order with product names
+        var enrichedOrders = new List<OrderDto>();
+        foreach (var order in ordersResult.Data)
+        {
+            var enrichedOrder = await EnrichOrderWithProductNamesFromIds(order);
+            enrichedOrders.Add(enrichedOrder);
+        }
+
+        _logger.LogInformation("Retrieved {Count} orders for user {UserId}", enrichedOrders.Count, userId);
+        return ServiceResult<List<OrderDto>>.Success(enrichedOrders);
     }
 
-    public Task<ServiceResult<OrderDto>> CancelOrderAsync(string orderId, string? reason = null, CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<OrderDto>> CancelOrderAsync(string orderId, string? reason = null, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        _logger.LogInformation("Cancelling order {OrderId} with reason: {Reason}", orderId, reason ?? "No reason provided");
+
+        var cancelResult = await _orderClient.CancelOrder(orderId, reason);
+
+        if (!cancelResult.IsSuccess || cancelResult.Data == null)
+        {
+            _logger.LogWarning("Failed to cancel order {OrderId}", orderId);
+            return ServiceResult<OrderDto>.Failure(
+                cancelResult.Error ?? new ErrorInfo { Code = "ORDER_CANCELLATION_FAILED", Message = $"Failed to cancel order {orderId}" });
+        }
+
+        // Enrich order with product names
+        var enrichedOrder = await EnrichOrderWithProductNamesFromIds(cancelResult.Data);
+
+        _logger.LogInformation("Order {OrderId} cancelled successfully", orderId);
+        return ServiceResult<OrderDto>.Success(enrichedOrder);
     }
 
-    public Task<ServiceResult<OrderDto>> UpdateOrderStatusAsync(string orderId, string newStatus, CancellationToken cancellationToken = default)
+    public async Task<ServiceResult<OrderDto>> UpdateOrderStatusAsync(string orderId, string newStatus, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        _logger.LogInformation("Updating order {OrderId} status to {NewStatus}", orderId, newStatus);
+
+        var updateResult = await _orderClient.UpdateOrderStatus(orderId, newStatus);
+
+        if (!updateResult.IsSuccess || updateResult.Data == null)
+        {
+            _logger.LogWarning("Failed to update order {OrderId} status to {NewStatus}", orderId, newStatus);
+            return ServiceResult<OrderDto>.Failure(
+                updateResult.Error ?? new ErrorInfo { Code = "ORDER_STATUS_UPDATE_FAILED", Message = $"Failed to update order {orderId} status" });
+        }
+
+        // Enrich order with product names
+        var enrichedOrder = await EnrichOrderWithProductNamesFromIds(updateResult.Data);
+
+        _logger.LogInformation("Order {OrderId} status updated successfully to {NewStatus}", orderId, newStatus);
+        return ServiceResult<OrderDto>.Success(enrichedOrder);
     }
-    
+
+    public async Task<ServiceResult<AddOrderItemResultDto>> AddOrderItemAsync(
+        string orderId,
+        AddOrderItemRequestDto request,
+        CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Adding item to order {OrderId} - Product: {ProductId}, Quantity: {Quantity}",
+            orderId, request.ProductId, request.Quantity);
+
+        // Step 1: Get the order to validate it exists and check current items
+        var orderResult = await _orderClient.GetOrderById(orderId);
+        if (!orderResult.IsSuccess || orderResult.Data == null)
+        {
+            _logger.LogWarning("Order {OrderId} not found", orderId);
+            return ServiceResult<AddOrderItemResultDto>.Failure(
+                orderResult.Error ?? new ErrorInfo { Code = "ORDER_NOT_FOUND", Message = $"Order with ID {orderId} not found" });
+        }
+
+        var order = orderResult.Data;
+
+        // Step 2: Check if the product is already in the order
+        var existingItem = order.Items.FirstOrDefault(item => item.ProductId == request.ProductId.ToString());
+        if (existingItem != null)
+        {
+            _logger.LogWarning("Product {ProductId} is already in order {OrderId}", request.ProductId, orderId);
+            return ServiceResult<AddOrderItemResultDto>.Failure(
+                new ErrorInfo
+                {
+                    Code = "PRODUCT_ALREADY_IN_ORDER",
+                    Message = $"Product {request.ProductId} is already in the order. Use update quantity instead."
+                });
+        }
+
+        // Step 3: Get product details and validate price
+        var productResult = await _productClient.GetProductById(request.ProductId.ToString());
+        if (!productResult.IsSuccess || productResult.Data == null)
+        {
+            _logger.LogWarning("Product {ProductId} not found", request.ProductId);
+            return ServiceResult<AddOrderItemResultDto>.Failure(
+                productResult.Error ?? new ErrorInfo { Code = "PRODUCT_NOT_FOUND", Message = $"Product with ID {request.ProductId} does not exist" });
+        }
+
+        var product = productResult.Data;
+        _logger.LogInformation("Product {ProductId} validated successfully with price {Price}", request.ProductId, product.Price);
+
+        // Step 4: Lock the stock
+        var lockResult = await _productClient.LockProductStock(request.ProductId.ToString(), request.Quantity);
+        if (!lockResult.IsSuccess)
+        {
+            _logger.LogWarning("Failed to lock stock for product {ProductId}: {Error}", request.ProductId, lockResult.Error?.Message);
+            return ServiceResult<AddOrderItemResultDto>.Failure(
+                lockResult.Error ?? new ErrorInfo { Code = "STOCK_LOCK_FAILED", Message = $"Failed to lock stock for product {request.ProductId}" });
+        }
+
+        _logger.LogInformation("Stock locked for product {ProductId}, quantity: {Quantity}", request.ProductId, request.Quantity);
+
+        // Step 5: Add the item to the order with the server-validated price
+        var addItemRequest = new AddOrderItemWithPriceDto
+        {
+            ProductId = request.ProductId,
+            Quantity = request.Quantity,
+            UnitPrice = (decimal)product.Price
+        };
+
+        var addResult = await _orderClient.AddOrderItem(orderId, addItemRequest);
+
+        if (!addResult.IsSuccess || addResult.Data == null)
+        {
+            _logger.LogError("Failed to add item to order {OrderId}: {Error}", orderId, addResult.Error?.Message);
+
+            // TODO: In a production system, we should implement a compensation mechanism here
+            // to release the locked stock if adding the item fails
+
+            return ServiceResult<AddOrderItemResultDto>.Failure(
+                addResult.Error ?? new ErrorInfo { Code = "ADD_ITEM_FAILED", Message = "Failed to add item to order" });
+        }
+
+        _logger.LogInformation("Item added successfully to order {OrderId}, ItemId: {ItemId}", orderId, addResult.Data.ItemId);
+
+        return ServiceResult<AddOrderItemResultDto>.Success(addResult.Data);
+    }
+
 
     private async Task<OrderDto> EnrichOrderWithProductNamesFromIds(OrderDto order)
     {

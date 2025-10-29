@@ -13,7 +13,8 @@ public class UserServiceGrpcClient : IUserServiceClient
 
     public UserServiceGrpcClient(
         UserService.UserServiceClient grpcClient,
-        ILogger<UserServiceGrpcClient> logger)
+        ILogger<UserServiceGrpcClient> logger
+    )
     {
         _grpcClient = grpcClient;
         _logger = logger;
@@ -25,53 +26,64 @@ public class UserServiceGrpcClient : IUserServiceClient
         {
             _logger.LogInformation("Calling gRPC service to get user with ID: {UserId}", userId);
 
-            var request = new GetUserRequest
-            {
-                UserId = userId
-            };
+            var request = new GetUserRequest { UserId = userId };
 
             var response = await _grpcClient.GetUserAsync(request);
 
             return response.ResultCase switch
             {
-                UserResponse.ResultOneofCase.Data => ServiceResult<UserDto>.Success(MapToDto(response.Data)),
-                UserResponse.ResultOneofCase.Error => ServiceResult<UserDto>.Failure(MapToErrorInfo(response.Error)),
-                _ => ServiceResult<UserDto>.Failure(new ErrorInfo
-                {
-                    Code = "EMPTY_RESPONSE",
-                    Message = "The gRPC service returned an empty response"
-                })
+                UserResponse.ResultOneofCase.Data => ServiceResult<UserDto>.Success(
+                    MapToDto(response.Data)
+                ),
+                UserResponse.ResultOneofCase.Error => ServiceResult<UserDto>.Failure(
+                    MapToErrorInfo(response.Error)
+                ),
+                _ => ServiceResult<UserDto>.Failure(
+                    new ErrorInfo
+                    {
+                        Code = "EMPTY_RESPONSE",
+                        Message = "The gRPC service returned an empty response",
+                    }
+                ),
             };
         }
         catch (RpcException ex)
         {
             _logger.LogError(ex, "gRPC call failed for UserId: {UserId}", userId);
 
-            return ServiceResult<UserDto>.Failure(new ErrorInfo
-            {
-                Code = "GRPC_ERROR",
-                Message = $"Failed to communicate with the user service: {ex.Status.Detail}",
-                Details = new Dictionary<string, string>
+            return ServiceResult<UserDto>.Failure(
+                new ErrorInfo
                 {
-                    ["StatusCode"] = ex.StatusCode.ToString(),
-                    ["Detail"] = ex.Status.Detail ?? string.Empty
+                    Code = "GRPC_ERROR",
+                    Message = $"Failed to communicate with the user service: {ex.Status.Detail}",
+                    Details = new Dictionary<string, string>
+                    {
+                        ["StatusCode"] = ex.StatusCode.ToString(),
+                        ["Detail"] = ex.Status.Detail ?? string.Empty,
+                    },
                 }
-            });
+            );
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unexpected error occurred while calling user service for UserId: {UserId}", userId);
+            _logger.LogError(
+                ex,
+                "Unexpected error occurred while calling user service for UserId: {UserId}",
+                userId
+            );
 
-            return ServiceResult<UserDto>.Failure(new ErrorInfo
-            {
-                Code = "UNEXPECTED_ERROR",
-                Message = "An unexpected error occurred while retrieving the user",
-                Details = new Dictionary<string, string>
+            return ServiceResult<UserDto>.Failure(
+                new ErrorInfo
                 {
-                    ["ExceptionType"] = ex.GetType().Name,
-                    ["Message"] = ex.Message
+                    Code = "UNEXPECTED_ERROR",
+                    Message = "An unexpected error occurred while retrieving the user",
+                    Details = new Dictionary<string, string>
+                    {
+                        ["ExceptionType"] = ex.GetType().Name,
+                        ["Message"] = ex.Message,
+                    },
                 }
-            });
+            );
         }
     }
 
@@ -83,22 +95,30 @@ public class UserServiceGrpcClient : IUserServiceClient
             {
                 FirstName = requestDto.FirstName,
                 LastName = requestDto.LastName,
-                Email = requestDto.Email
+                Email = requestDto.Email,
             };
 
             var response = await _grpcClient.CreateUserAsync(request);
 
             return response.ResultCase switch
             {
-                UserResponse.ResultOneofCase.Data => ServiceResult<UserDto>.Success(MapToDto(response.Data)),
-                UserResponse.ResultOneofCase.Error => ServiceResult<UserDto>.Failure(MapToErrorInfo(response.Error)),
-                _ => ServiceResult<UserDto>.Failure(new ErrorInfo { Code = "EMPTY_RESPONSE", Message = "Empty response from gRPC" })
+                UserResponse.ResultOneofCase.Data => ServiceResult<UserDto>.Success(
+                    MapToDto(response.Data)
+                ),
+                UserResponse.ResultOneofCase.Error => ServiceResult<UserDto>.Failure(
+                    MapToErrorInfo(response.Error)
+                ),
+                _ => ServiceResult<UserDto>.Failure(
+                    new ErrorInfo { Code = "EMPTY_RESPONSE", Message = "Empty response from gRPC" }
+                ),
             };
         }
         catch (RpcException ex)
         {
             _logger.LogError(ex, "gRPC CreateUser failed");
-            return ServiceResult<UserDto>.Failure(new ErrorInfo { Code = "GRPC_ERROR", Message = ex.Status.Detail });
+            return ServiceResult<UserDto>.Failure(
+                new ErrorInfo { Code = "GRPC_ERROR", Message = ex.Status.Detail }
+            );
         }
     }
 
@@ -119,44 +139,60 @@ public class UserServiceGrpcClient : IUserServiceClient
 
             return response.ResultCase switch
             {
-                GetUsersResponse.ResultOneofCase.Data => ServiceResult<PagedUsersDto>.Success(MapToPagedDto(response.Data)),
-                GetUsersResponse.ResultOneofCase.Error => ServiceResult<PagedUsersDto>.Failure(MapToErrorInfo(response.Error)),
-                _ => ServiceResult<PagedUsersDto>.Failure(new ErrorInfo { Code = "EMPTY_RESPONSE", Message = "Empty response from gRPC" })
+                GetUsersResponse.ResultOneofCase.Data => ServiceResult<PagedUsersDto>.Success(
+                    MapToPagedDto(response.Data)
+                ),
+                GetUsersResponse.ResultOneofCase.Error => ServiceResult<PagedUsersDto>.Failure(
+                    MapToErrorInfo(response.Error)
+                ),
+                _ => ServiceResult<PagedUsersDto>.Failure(
+                    new ErrorInfo { Code = "EMPTY_RESPONSE", Message = "Empty response from gRPC" }
+                ),
             };
         }
         catch (RpcException ex)
         {
             _logger.LogError(ex, "gRPC GetUsers failed");
-            return ServiceResult<PagedUsersDto>.Failure(new ErrorInfo { Code = "GRPC_ERROR", Message = ex.Status.Detail });
+            return ServiceResult<PagedUsersDto>.Failure(
+                new ErrorInfo { Code = "GRPC_ERROR", Message = ex.Status.Detail }
+            );
         }
     }
 
-    public async Task<ServiceResult<UserDto>> UpdateUser(UpdateUserRequestDto dto)
+    public async Task<ServiceResult<UserDto>> UpdateUser(string id, UpdateUserRequestDto dto)
     {
         try
         {
-            var request = new UpdateUserRequest
-            {
-                UserId = dto.UserId
-            };
+            var request = new UpdateUserRequest { UserId = id };
 
-            if (!string.IsNullOrWhiteSpace(dto.FirstName)) request.FirstName = dto.FirstName;
-            if (!string.IsNullOrWhiteSpace(dto.LastName)) request.LastName = dto.LastName;
-            if (!string.IsNullOrWhiteSpace(dto.Email)) request.Email = dto.Email;
+            if (!string.IsNullOrWhiteSpace(dto.FirstName))
+                request.FirstName = dto.FirstName;
+            if (!string.IsNullOrWhiteSpace(dto.LastName))
+                request.LastName = dto.LastName;
+            if (!string.IsNullOrWhiteSpace(dto.Email))
+                request.Email = dto.Email;
 
             var response = await _grpcClient.UpdateUserAsync(request);
 
             return response.ResultCase switch
             {
-                UserResponse.ResultOneofCase.Data => ServiceResult<UserDto>.Success(MapToDto(response.Data)),
-                UserResponse.ResultOneofCase.Error => ServiceResult<UserDto>.Failure(MapToErrorInfo(response.Error)),
-                _ => ServiceResult<UserDto>.Failure(new ErrorInfo { Code = "EMPTY_RESPONSE", Message = "Empty response from gRPC" })
+                UserResponse.ResultOneofCase.Data => ServiceResult<UserDto>.Success(
+                    MapToDto(response.Data)
+                ),
+                UserResponse.ResultOneofCase.Error => ServiceResult<UserDto>.Failure(
+                    MapToErrorInfo(response.Error)
+                ),
+                _ => ServiceResult<UserDto>.Failure(
+                    new ErrorInfo { Code = "EMPTY_RESPONSE", Message = "Empty response from gRPC" }
+                ),
             };
         }
         catch (RpcException ex)
         {
             _logger.LogError(ex, "gRPC UpdateUser failed");
-            return ServiceResult<UserDto>.Failure(new ErrorInfo { Code = "GRPC_ERROR", Message = ex.Status.Detail });
+            return ServiceResult<UserDto>.Failure(
+                new ErrorInfo { Code = "GRPC_ERROR", Message = ex.Status.Detail }
+            );
         }
     }
 
@@ -169,15 +205,27 @@ public class UserServiceGrpcClient : IUserServiceClient
 
             return response.ResultCase switch
             {
-                DeleteUserResponse.ResultOneofCase.Data => ServiceResult<DeleteUserResultDto>.Success(new DeleteUserResultDto { Success = response.Data.Success, UserId = response.Data.UserId }),
-                DeleteUserResponse.ResultOneofCase.Error => ServiceResult<DeleteUserResultDto>.Failure(MapToErrorInfo(response.Error)),
-                _ => ServiceResult<DeleteUserResultDto>.Failure(new ErrorInfo { Code = "EMPTY_RESPONSE", Message = "Empty response from gRPC" })
+                DeleteUserResponse.ResultOneofCase.Data =>
+                    ServiceResult<DeleteUserResultDto>.Success(
+                        new DeleteUserResultDto
+                        {
+                            Success = response.Data.Success,
+                            UserId = response.Data.UserId,
+                        }
+                    ),
+                DeleteUserResponse.ResultOneofCase.Error =>
+                    ServiceResult<DeleteUserResultDto>.Failure(MapToErrorInfo(response.Error)),
+                _ => ServiceResult<DeleteUserResultDto>.Failure(
+                    new ErrorInfo { Code = "EMPTY_RESPONSE", Message = "Empty response from gRPC" }
+                ),
             };
         }
         catch (RpcException ex)
         {
             _logger.LogError(ex, "gRPC DeleteUser failed");
-            return ServiceResult<DeleteUserResultDto>.Failure(new ErrorInfo { Code = "GRPC_ERROR", Message = ex.Status.Detail });
+            return ServiceResult<DeleteUserResultDto>.Failure(
+                new ErrorInfo { Code = "GRPC_ERROR", Message = ex.Status.Detail }
+            );
         }
     }
 
@@ -188,7 +236,7 @@ public class UserServiceGrpcClient : IUserServiceClient
             UserId = data.UserId,
             FirstName = data.FirstName,
             LastName = data.LastName,
-            Email = data.Email
+            Email = data.Email,
         };
     }
 
@@ -198,7 +246,8 @@ public class UserServiceGrpcClient : IUserServiceClient
         {
             Code = error.Code,
             Message = error.Message,
-            Details = error.Details?.Count > 0 ? new Dictionary<string, string>(error.Details) : null
+            Details =
+                error.Details?.Count > 0 ? new Dictionary<string, string>(error.Details) : null,
         };
     }
 
@@ -209,7 +258,7 @@ public class UserServiceGrpcClient : IUserServiceClient
             Items = data.Items.Select(MapToDto).ToList(),
             PageNumber = data.PageNumber,
             PageSize = data.PageSize,
-            TotalCount = data.TotalCount
+            TotalCount = data.TotalCount,
         };
     }
 }

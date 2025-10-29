@@ -1,16 +1,35 @@
 @baseUrl = http://localhost:5046
-### 1️⃣ Create User
+### Create User
 POST {{baseUrl}}/api/users
 Content-Type: application/json
 
 {
   "firstName": "Guido",
   "lastName": "Lavespa",
-  "email": "g.lavespa+{{ $randomInt 1000 9999 }}@example.com"
+  "email": "g.lavespa+{{$timestamp}}@example.com"
+
 }
 
 > {% client.global.set("userId", response.body.userId); %}
 ###  Saved userId = {{userId}}
 
-### 2️⃣ Get User by ID
+###  Get User by ID
 GET {{baseUrl}}/api/users/{{userId}}
+
+###  Get Users (Paginated)
+GET {{baseUrl}}/api/users/1/10
+Accept: application/json
+
+###  Get Users with Search
+GET {{baseUrl}}/api/users/1/10?searchTerm=Guido
+Accept: application/json
+
+###  Update User
+PUT {{baseUrl}}/api/users/{{userId}}
+Content-Type: application/json
+
+{
+  "firstName": "Guido",
+  "lastName": "Lavespa Updated",
+  "email": "g.lavespa.updated@example.com"
+}
