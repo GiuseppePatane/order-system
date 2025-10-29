@@ -39,6 +39,7 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddProductGrpcClient("http://product-grpcservice");
 builder.Services.AddUserGrpcClient("http://user-grpcservice");
 builder.Services.AddAddressGrpcClient("http://address-grpcservice");
+builder.Services.AddOrderGrpcClient("http://order-grpcservice");
 
 
 var app = builder.Build();
