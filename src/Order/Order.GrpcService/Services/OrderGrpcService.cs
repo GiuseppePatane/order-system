@@ -499,8 +499,7 @@ public class OrderGrpcService : OrderService.OrderServiceBase
             {
                 Data = new RemoveOrderItemData
                 {
-                    OrderId = result.Value.OrderId.ToString(),
-                    Success = result.Value.Success
+                    OrderId = result.Value.OrderId.ToString()
                 }
             };
         }

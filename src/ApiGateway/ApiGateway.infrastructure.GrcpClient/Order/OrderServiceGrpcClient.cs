@@ -294,8 +294,7 @@ public class OrderServiceGrpcClient : IOrderServiceClient
             {
                 return ServiceResult<RemoveOrderItemResultDto>.Success(new RemoveOrderItemResultDto
                 {
-                    OrderId = response.Data.OrderId,
-                    Success = response.Data.Success
+                    OrderId = response.Data.OrderId
                 });
             }
 

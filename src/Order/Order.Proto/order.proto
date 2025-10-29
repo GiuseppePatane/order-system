@@ -179,7 +179,6 @@ message RemoveOrderItemResponse {
 
 message RemoveOrderItemData {
   string order_id = 1;
-  bool success = 2;
 }
 
 // ===== Update Order Item Quantity ======
