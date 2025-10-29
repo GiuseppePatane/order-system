@@ -1,0 +1,9 @@
+@baseUrl = http://localhost:5046
+@userId = {{userId}}
+@addressId = {{addressId}}
+
+### 1️⃣ Delete Address
+DELETE {{baseUrl}}/api/addresses/{{addressId}}
+
+### 2️⃣ Delete User
+DELETE {{baseUrl}}/api/users/{{userId}}

@@ -1,0 +1,95 @@
+@baseUrl = http://localhost:5046
+@userId = {{userId}}
+@addressId = {{addressId}}
+
+@userId = {{userId}}
+@addressId = {{addressId}}
+
+### Get first available product (paged)
+GET {{baseUrl}}/api/products/1/1
+Accept: application/json
+
+> {%
+    let data = {};
+    try { 
+        data = typeof response.body === 'string' ? JSON.parse(response.body) : response.body; 
+    }
+    catch(e) { 
+        console.error("JSON parse failed", e); 
+    }
+
+    const items = data.items;
+    if (items && items.length > 0) {
+        client.global.set("productId", items[0].productId);
+        console.log("Saved productId =", items[0].productId);
+    } else {
+        console.warn("Strano sulla mia macchina funzionava cit.");
+    }
+%}
+
+### Saved productId = {{productId}}
+
+@productId = {{productId}}
+
+### Create Order
+POST {{baseUrl}}/api/orders
+Content-Type: application/json
+
+{
+  "userId": "{{userId}}",
+  "shippingAddressId": "{{addressId}}",
+  "billingAddressId": "{{addressId}}",
+  "items": [
+    {
+      "productId": "{{productId}}",
+      "quantity": 4769
+    }
+  ]
+}
+
+
+> {% client.global.set("orderId", response.body.orderId); %}
+### Saved orderId = {{orderId}}
+
+### Add Item to Order
+
+
+
+POST {{baseUrl}}/api/orders/{{orderId}}/items
+Content-Type: application/json
+
+{
+  "productId": "{{productId}}",
+  "quantity": 2,
+  "unitPrice": 19.99
+}
+
+> {% client.global.set("itemId", response.body.itemId); %}
+### Saved itemId = {{itemId}}
+
+### 3️⃣ Update Item Quantity
+PATCH {{baseUrl}}/api/orders/{{orderId}}/items/{{itemId}}/quantity
+Content-Type: application/json
+
+{
+  "newQuantity": 3
+}
+
+### 4️⃣ Update Order Status
+PATCH {{baseUrl}}/api/orders/{{orderId}}/status
+Content-Type: application/json
+
+{
+  "status": "Confirmed"
+}
+
+### 5️⃣ Cancel Order
+DELETE {{baseUrl}}/api/orders/{{orderId}}/cancel
+Content-Type: application/json
+
+{
+  "reason": "Customer request"
+}
+
+### 6️⃣ Get Order Details
+GET {{baseUrl}}/api/orders/{{orderId}}

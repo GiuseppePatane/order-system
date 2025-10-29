@@ -1,0 +1,20 @@
+@baseUrl = http://localhost:5046
+
+### 1️⃣ Create Product
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+
+{
+  "name": "Iphone 19",
+  "description": "The best iphone ever made.",
+  "categoryId": "Electronics",
+  "price": 79.90,
+  "stock": 100,
+  "sku": "IPHONE-{{ $randomInt 1000 9999 }}"
+}
+
+> {% client.global.set("productId", response.body.productId); %}
+### ✅ Saved productId = {{productId}}
+
+### 2️⃣ Get Product by ID
+GET {{baseUrl}}/api/products/{{productId}}

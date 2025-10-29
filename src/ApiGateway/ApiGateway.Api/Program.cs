@@ -66,5 +66,5 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.MapControllers();
-
+app.MapGet("/", () => Results.Redirect("/swagger")).ExcludeFromDescription();
 app.Run();

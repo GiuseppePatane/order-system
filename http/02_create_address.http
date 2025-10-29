@@ -1,0 +1,26 @@
+@baseUrl = http://localhost:5046
+@userId = {{userId}}
+
+### 1️⃣ Create Address
+POST {{baseUrl}}/api/addresses
+Content-Type: application/json
+
+{
+  "userId": "{{userId}}",
+  "street": "Via Roma 1",
+  "city": "Catania",
+  "state": "CT",
+  "postalCode": "95100",
+  "country": "IT",
+  "label": "Casa",
+  "isDefault": true
+}
+
+> {% client.global.set("addressId", response.body.addressId); %}
+### ✅ Saved addressId = {{addressId}}
+
+### 2️⃣ Get Address by ID
+GET {{baseUrl}}/api/addresses/{{addressId}}
+
+### 3️⃣ Get Default Address for User
+GET {{baseUrl}}/api/addresses/user/{{userId}}/default
