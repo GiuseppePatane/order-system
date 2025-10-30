@@ -10,7 +10,6 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddAddressApplication(this IServiceCollection services)
     {
-        // Register handlers
         services.AddScoped<CreateAddressHandler>();
         services.AddScoped<UpdateAddressHandler>();
         services.AddScoped<DeleteAddressHandler>();

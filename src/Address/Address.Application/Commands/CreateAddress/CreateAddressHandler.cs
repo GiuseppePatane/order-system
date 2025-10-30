@@ -48,7 +48,11 @@ public class CreateAddressHandler
 
         // Save the address
         var savedAddress = await _writeRepository.AddAsync(address, cancellationToken);
+        if (!savedAddress.IsSuccess)
+        {
+            return Result<CreateAddressResult>.Failure(savedAddress.Error!);
+        }
 
-        return Result<CreateAddressResult>.Success(new CreateAddressResult(savedAddress.Id));
+        return Result<CreateAddressResult>.Success(new CreateAddressResult(address.Id));
     }
 }

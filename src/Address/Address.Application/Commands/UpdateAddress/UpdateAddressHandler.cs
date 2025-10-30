@@ -25,7 +25,7 @@ public class UpdateAddressHandler
         {
             return Result<UpdateAddressResult>.Failure(new NotFoundError("Address", request.AddressId.ToString()));
         }
-
+        
         // Update the address
         var updateResult = address.Update(
             request.Street,
@@ -43,8 +43,12 @@ public class UpdateAddressHandler
         }
 
         // Save changes
-        var updatedAddress = await _writeRepository.UpdateAsync(address, cancellationToken);
+        var updatedAddressResults = await _writeRepository.UpdateAsync(address, cancellationToken);
+        if (!updatedAddressResults.IsSuccess)
+        {
+            return Result<UpdateAddressResult>.Failure(updatedAddressResults.Error!);
+        }
 
-        return Result<UpdateAddressResult>.Success(new UpdateAddressResult(updatedAddress.Id));
+        return Result<UpdateAddressResult>.Success(new UpdateAddressResult(address.Id));
     }
 }

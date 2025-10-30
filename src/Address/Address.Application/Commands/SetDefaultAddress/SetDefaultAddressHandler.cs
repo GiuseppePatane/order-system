@@ -19,22 +19,15 @@ public class SetDefaultAddressHandler
 
     public async Task<Result<SetDefaultAddressResult>> Handle(SetDefaultAddressCommand request, CancellationToken cancellationToken)
     {
-        // Get the address
-        var address = await _readRepository.GetByIdAsync(request.AddressId, cancellationToken);
-        if (address == null)
+   
+        var addressExists = await _readRepository.GetByIdAsync(request.AddressId, cancellationToken);
+        if (addressExists == null)
         {
             return Result<SetDefaultAddressResult>.Failure(new NotFoundError("Address", request.AddressId.ToString()));
         }
+        
+        await _writeRepository.SetDefaultAddressAsync(request.AddressId, addressExists.UserId, cancellationToken);
 
-        // Unset all defaults for this user
-        await _writeRepository.UnsetAllDefaultsForUserAsync(address.UserId, cancellationToken);
-
-        // Set this address as default
-        address.SetAsDefault();
-
-        // Save changes
-        await _writeRepository.UpdateAsync(address, cancellationToken);
-
-        return Result<SetDefaultAddressResult>.Success(new SetDefaultAddressResult(address.Id));
+        return Result<SetDefaultAddressResult>.Success(new SetDefaultAddressResult(request.AddressId));
     }
 }

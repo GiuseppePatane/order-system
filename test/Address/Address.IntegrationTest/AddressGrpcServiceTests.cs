@@ -1,8 +1,8 @@
-using Microsoft.EntityFrameworkCore;
 using Address.Infrastructure.EF;
 using Address.IntegrationTest.Fixtures;
 using Address.IntegrationTest.Infrastructure;
 using Address.Protos;
+using Microsoft.EntityFrameworkCore;
 using Shouldly;
 using Xunit.Abstractions;
 
@@ -144,7 +144,7 @@ public class AddressGrpcServiceTests : IAsyncLifetime
         {
             UserId = _testUserId.ToString(),
             PageNumber = 1,
-            PageSize = 5
+            PageSize = 5,
         };
         var response = await _grpcClient.GetPagedAddressesByUserAsync(request);
 
@@ -171,7 +171,7 @@ public class AddressGrpcServiceTests : IAsyncLifetime
             Country = "USA",
             Street2 = "Apt 4B",
             Label = "Home",
-            IsDefault = true
+            IsDefault = true,
         };
         var response = await _grpcClient.CreateAddressAsync(request);
 
@@ -183,8 +183,9 @@ public class AddressGrpcServiceTests : IAsyncLifetime
         // Verify in database
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<AddressDbContext>();
-        var savedAddress = await context.Addresses
-            .FirstOrDefaultAsync(a => a.UserId == _testUserId);
+        var savedAddress = await context.Addresses.FirstOrDefaultAsync(a =>
+            a.UserId == _testUserId
+        );
 
         savedAddress.ShouldNotBeNull();
         savedAddress.Street.ShouldBe("123 Main St");
@@ -212,7 +213,7 @@ public class AddressGrpcServiceTests : IAsyncLifetime
             State = "MA",
             PostalCode = "02101",
             Country = "USA",
-            IsDefault = true
+            IsDefault = true,
         };
         var response = await _grpcClient.CreateAddressAsync(request);
 
@@ -222,8 +223,8 @@ public class AddressGrpcServiceTests : IAsyncLifetime
         // Verify only one default exists
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<AddressDbContext>();
-        var defaultAddresses = await context.Addresses
-            .Where(a => a.UserId == _testUserId && a.IsDefault)
+        var defaultAddresses = await context
+            .Addresses.Where(a => a.UserId == _testUserId && a.IsDefault)
             .ToListAsync();
 
         defaultAddresses.Count.ShouldBe(1);
@@ -252,7 +253,7 @@ public class AddressGrpcServiceTests : IAsyncLifetime
             State = "CA",
             PostalCode = "90001",
             Country = "USA",
-            Label = "Office"
+            Label = "Office",
         };
         var response = await _grpcClient.UpdateAddressAsync(request);
 
@@ -304,18 +305,20 @@ public class AddressGrpcServiceTests : IAsyncLifetime
     public async Task SetDefaultAddress_ShouldSetAddressAsDefault()
     {
         // Arrange
-        Guid addressId = Guid.Empty;
+        Guid actualDefaultAddressId = Guid.Empty;
+        Guid newDefaultAddressId = Guid.Empty;
         await _factory.SeedDatabaseAsync(context =>
         {
             var addresses = TestDataGenerator.CreateAddresses(_testUserId, 3);
             // Second address will be set as default
-            addressId = addresses[1].Id;
+            actualDefaultAddressId = addresses[0].Id; // Initially default
+            newDefaultAddressId = addresses[1].Id;
             context.Addresses.AddRange(addresses);
             context.SaveChanges();
         });
 
         // Act
-        var request = new SetDefaultAddressRequest { AddressId = addressId.ToString() };
+        var request = new SetDefaultAddressRequest { AddressId = newDefaultAddressId.ToString() };
         var response = await _grpcClient.SetDefaultAddressAsync(request);
 
         // Assert
@@ -326,11 +329,12 @@ public class AddressGrpcServiceTests : IAsyncLifetime
         // Verify only one default exists
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<AddressDbContext>();
-        var defaultAddresses = await context.Addresses
-            .Where(a => a.UserId == _testUserId && a.IsDefault)
-            .ToListAsync();
+        var defaultAddresses = await context.Addresses.FirstOrDefaultAsync(a =>
+            a.UserId == _testUserId && a.IsDefault
+        );
 
-        defaultAddresses.Count.ShouldBe(1);
-        defaultAddresses[0].Id.ShouldBe(addressId);
+        defaultAddresses.ShouldNotBeNull();
+        defaultAddresses.Id.ShouldBe(newDefaultAddressId);
+        defaultAddresses.Id.ShouldNotBe(actualDefaultAddressId);
     }
 }

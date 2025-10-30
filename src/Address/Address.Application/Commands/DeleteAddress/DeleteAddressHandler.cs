@@ -29,9 +29,9 @@ public class DeleteAddressHandler
         // Delete the address
         var deleted = await _writeRepository.DeleteAsync(request.AddressId, cancellationToken);
 
-        if (!deleted)
+        if (!deleted.IsSuccess)
         {
-            return Result<DeleteAddressResult>.Failure(new PersistenceError("Failed to delete address"));
+            return Result<DeleteAddressResult>.Failure(deleted.Error!);
         }
 
         return Result<DeleteAddressResult>.Success(new DeleteAddressResult(true, request.AddressId));
