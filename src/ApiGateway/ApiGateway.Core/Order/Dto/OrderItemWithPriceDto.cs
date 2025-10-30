@@ -1,4 +1,4 @@
-namespace ApiGateway.Core.Order;
+namespace ApiGateway.Core.Order.Dto;
 
 /// <summary>
 /// Internal order item with server-validated price

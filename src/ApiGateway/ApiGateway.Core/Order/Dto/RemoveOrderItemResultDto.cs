@@ -1,4 +1,4 @@
-namespace ApiGateway.Core.Order;
+namespace ApiGateway.Core.Order.Dto;
 
 /// <summary>
 /// Result of removing an item from an order.

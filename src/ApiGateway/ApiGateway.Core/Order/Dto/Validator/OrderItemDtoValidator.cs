@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace ApiGateway.Core.Order.Validator;
+namespace ApiGateway.Core.Order.Dto.Validator;
 
 public class OrderItemDtoValidator : AbstractValidator<OrderItemDto>
 {

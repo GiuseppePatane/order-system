@@ -1,5 +1,6 @@
 using ApiGateway.Core.Order;
 using ApiGateway.Core.Common;
+using ApiGateway.Core.Order.Dto;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ApiGateway.Api.Controllers;
@@ -22,26 +23,9 @@ public class OrdersController : Base
         _logger = logger;
     }
 
-    /*
-     Create a new order
-     
-     curl example:
-     curl -X POST http://localhost:5000/api/orders \
-       -H "Content-Type: application/json" \
-       -d '{
-         "userId": "11111111-1111-1111-1111-111111111111",
-         "shippingAddressId": "22222222-2222-2222-2222-222222222222",
-         "items": [
-           {
-             "productId": "33333333-3333-3333-3333-333333333333",
-             "quantity": 2,
-             "unitPrice": 29.99
-           }
-         ]
-       }'
-    */
+
     [HttpPost]
-    [ProducesResponseType(typeof(OrderDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(OrderMutationResponseDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
@@ -62,12 +46,7 @@ public class OrdersController : Base
         return MapErrorToProblemDetails(result.Error!);
     }
 
-    /*
-     Get order by ID
-     
-     curl example:
-     curl http://localhost:5000/api/orders/{orderId}
-    */
+
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(OrderDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
@@ -84,12 +63,7 @@ public class OrdersController : Base
         return MapErrorToProblemDetails(result.Error!);
     }
 
-    /*
-     Get orders for a specific user
-     
-     curl example:
-     curl http://localhost:5000/api/orders/user/{userId}
-    */
+
     [HttpGet("user/{userId}")]
     [ProducesResponseType(typeof(List<OrderDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
@@ -106,14 +80,7 @@ public class OrdersController : Base
         return MapErrorToProblemDetails(result.Error!);
     }
 
-    /*
-     Cancel an order
-     
-     curl example:
-     curl -X DELETE http://localhost:5000/api/orders/{orderId}/cancel \
-       -H "Content-Type: application/json" \
-       -d '{"reason": "Customer requested cancellation"}'
-    */
+
     [HttpDelete("{id}/cancel")]
     [ProducesResponseType(typeof(OrderDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
@@ -131,14 +98,7 @@ public class OrdersController : Base
         return MapErrorToProblemDetails(result.Error!);
     }
 
-    /*
-     Update order status
-     
-     curl example:
-     curl -X PATCH http://localhost:5000/api/orders/{orderId}/status \
-       -H "Content-Type: application/json" \
-       -d '{"status": "Confirmed"}'
-    */
+
     [HttpPatch("{id}/status")]
     [ProducesResponseType(typeof(OrderDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
@@ -156,24 +116,13 @@ public class OrdersController : Base
         return MapErrorToProblemDetails(result.Error!);
     }
 
-    /*
-     Add an item to an existing order (only for pending orders)
 
-     curl example:
-     curl -X POST http://localhost:5000/api/orders/{orderId}/items \
-       -H "Content-Type: application/json" \
-       -d '{
-         "productId": "33333333-3333-3333-3333-333333333333",
-         "quantity": 1,
-         "unitPrice": 19.99
-       }'
-    */
     [HttpPost("{orderId}/items")]
-    [ProducesResponseType(typeof(AddOrderItemResultDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(OrderItemDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> AddOrderItem(string orderId, [FromBody] AddOrderItemRequestDto request)
+    public async Task<IActionResult> AddOrderItem(string orderId, [FromBody] OrderItemDto request)
     {
         _logger.LogInformation("Adding item to order {OrderId}", orderId);
 
@@ -187,12 +136,7 @@ public class OrdersController : Base
         return MapErrorToProblemDetails(result.Error!);
     }
 
-    /*
-     Remove an item from an existing order (only for pending orders)
-
-     curl example:
-     curl -X DELETE http://localhost:5000/api/orders/{orderId}/items/{itemId}
-    */
+ 
     [HttpDelete("{orderId}/items/{itemId}")]
     [ProducesResponseType(typeof(RemoveOrderItemResultDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
@@ -212,14 +156,7 @@ public class OrdersController : Base
         return MapErrorToProblemDetails(result.Error!);
     }
 
-    /*
-     Update the quantity of an order item (only for pending orders)
 
-     curl example:
-     curl -X PATCH http://localhost:5000/api/orders/{orderId}/items/{itemId}/quantity \
-       -H "Content-Type: application/json" \
-       -d '{"newQuantity": 5}'
-    */
     [HttpPatch("{orderId}/items/{itemId}/quantity")]
     [ProducesResponseType(typeof(UpdateOrderItemQuantityResultDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]

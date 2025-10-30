@@ -1,5 +1,6 @@
 using ApiGateway.Core.Common;
 using ApiGateway.Core.Order;
+using ApiGateway.Core.Order.Dto;
 
 namespace ApiGateway.Core.Order;
 
@@ -18,7 +19,7 @@ public interface IOrderServiceClient
     Task<ServiceResult<OrderDto>> UpdateOrderStatus(string orderId, string newStatus);
 
     // Item management methods
-    Task<ServiceResult<AddOrderItemResultDto>> AddOrderItem(string orderId, AddOrderItemWithPriceDto request);
+    Task<ServiceResult<AddOrderItemResultDto>> AddOrderItem(string orderId, OrderItemWithPriceDto request);
     Task<ServiceResult<RemoveOrderItemResultDto>> RemoveOrderItem(string orderId, string itemId);
     Task<ServiceResult<UpdateOrderItemQuantityResultDto>> UpdateOrderItemQuantity(string orderId, string itemId, int newQuantity);
 }

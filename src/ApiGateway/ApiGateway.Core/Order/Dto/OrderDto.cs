@@ -1,4 +1,8 @@
-namespace ApiGateway.Core.Order;
+namespace ApiGateway.Core.Order.Dto;
+
+
+public record OrderMutationResponseDto (string OrderId, string Status);
+
 
 public class OrderDto
 {

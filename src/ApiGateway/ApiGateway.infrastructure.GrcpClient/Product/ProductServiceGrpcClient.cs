@@ -20,7 +20,7 @@ public class ProductServiceGrpcClient : IProductServiceClient
         _logger = logger;
     }
 
-    public async Task<ServiceResult<ProductDto>> GetProductById(string productId)
+    public async Task<ServiceResult<ProductDto>> GetProductById(string productId,CancellationToken cancellationToken=default)
     {
         try
         {
@@ -31,7 +31,7 @@ public class ProductServiceGrpcClient : IProductServiceClient
                 ProductId = productId
             };
 
-            var response = await _grpcClient.GetProductAsync(request);
+            var response = await _grpcClient.GetProductAsync(request, cancellationToken: cancellationToken);
 
             return response.ResultCase switch
             {
@@ -76,7 +76,7 @@ public class ProductServiceGrpcClient : IProductServiceClient
         }
     }
 
-    public async Task<ServiceResult<ProductMutationResultDto>> CreateProduct(CreateProductRequestDto requestDto)
+    public async Task<ServiceResult<ProductMutationResultDto>> CreateProduct(CreateProductRequestDto requestDto,CancellationToken cancellationToken=default)
     {
         try
         {
@@ -90,7 +90,7 @@ public class ProductServiceGrpcClient : IProductServiceClient
                 CategoryId = requestDto.CategoryId
             };
 
-            var response = await _grpcClient.CreateProductAsync(request);
+            var response = await _grpcClient.CreateProductAsync(request, cancellationToken: cancellationToken);
 
             return response.ResultCase switch
             {
@@ -107,7 +107,7 @@ public class ProductServiceGrpcClient : IProductServiceClient
         }
     }
 
-    public async Task<ServiceResult<PagedProductsDto>> GetProducts(GetProductsRequestDto requestDto)
+    public async Task<ServiceResult<PagedProductsDto>> GetProducts(GetProductsRequestDto requestDto,CancellationToken cancellationToken=default)
     {
         try
         {
@@ -126,7 +126,7 @@ public class ProductServiceGrpcClient : IProductServiceClient
             if (!string.IsNullOrWhiteSpace(requestDto.SearchTerm))
                 request.SearchTerm = requestDto.SearchTerm;
 
-            var response = await _grpcClient.GetProductsAsync(request);
+            var response = await _grpcClient.GetProductsAsync(request, cancellationToken: cancellationToken);
 
             return response.ResultCase switch
             {
@@ -142,7 +142,7 @@ public class ProductServiceGrpcClient : IProductServiceClient
         }
     }
 
-    public async Task<ServiceResult<ProductMutationResultDto>> UpdateProduct(string productId, UpdateProductRequestDto dto)
+    public async Task<ServiceResult<ProductMutationResultDto>> UpdateProduct(string productId, UpdateProductRequestDto dto,CancellationToken cancellationToken=default)
     {
         try
         {
@@ -157,7 +157,7 @@ public class ProductServiceGrpcClient : IProductServiceClient
             if (!string.IsNullOrWhiteSpace(dto.Sku)) request.Sku = dto.Sku;
             if (!string.IsNullOrWhiteSpace(dto.CategoryId)) request.CategoryId = dto.CategoryId;
 
-            var response = await _grpcClient.UpdateProductAsync(request);
+            var response = await _grpcClient.UpdateProductAsync(request, cancellationToken: cancellationToken);
 
             return response.ResultCase switch
             {
@@ -174,12 +174,12 @@ public class ProductServiceGrpcClient : IProductServiceClient
         }
     }
 
-    public async Task<ServiceResult<ProductMutationResultDto>> DeleteProduct(string productId)
+    public async Task<ServiceResult<ProductMutationResultDto>> DeleteProduct(string productId,CancellationToken cancellationToken=default)
     {
         try
         {
             var request = new DeleteProductRequest { ProductId = productId };
-            var response = await _grpcClient.DeleteProductAsync(request);
+            var response = await _grpcClient.DeleteProductAsync(request, cancellationToken: cancellationToken);
 
             return response.ResultCase switch
             {
@@ -233,7 +233,7 @@ public class ProductServiceGrpcClient : IProductServiceClient
         };
     }
 
-    public async Task<ServiceResult<StockUpdateDto>> LockProductStock(string productId, int quantity)
+    public async Task<ServiceResult<StockUpdateDto>> LockProductStock(string productId, int quantity,CancellationToken cancellationToken=default)
     {
         try
         {
@@ -246,7 +246,7 @@ public class ProductServiceGrpcClient : IProductServiceClient
                 Quantity = quantity
             };
 
-            var response = await _grpcClient.LockProductStockAsync(request);
+            var response = await _grpcClient.LockProductStockAsync(request, cancellationToken: cancellationToken);
 
             return response.ResultCase switch
             {
@@ -290,7 +290,7 @@ public class ProductServiceGrpcClient : IProductServiceClient
         }
     }
 
-    public async Task<ServiceResult<StockUpdateDto>> ReleaseProductStock(string productId, int quantity)
+    public async Task<ServiceResult<StockUpdateDto>> ReleaseProductStock(string productId, int quantity,CancellationToken cancellationToken=default)
     {
         try
         {
@@ -303,7 +303,7 @@ public class ProductServiceGrpcClient : IProductServiceClient
                 Quantity = quantity
             };
 
-            var response = await _grpcClient.ReleaseProductStockAsync(request);
+            var response = await _grpcClient.ReleaseProductStockAsync(request, cancellationToken: cancellationToken);
 
             return response.ResultCase switch
             {
@@ -345,7 +345,7 @@ public class ProductServiceGrpcClient : IProductServiceClient
         }
     }
 
-    public async Task<ServiceResult<PagedCategoriesDto>> GetCategories(GetCategoriesRequestDto requestDto)
+    public async Task<ServiceResult<PagedCategoriesDto>> GetCategories(GetCategoriesRequestDto requestDto, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -361,7 +361,7 @@ public class ProductServiceGrpcClient : IProductServiceClient
             if (requestDto.IsActive.HasValue)
                 request.IsActive = requestDto.IsActive.Value;
 
-            var response = await _grpcClient.GetCategoriesAsync(request);
+            var response = await _grpcClient.GetCategoriesAsync(request, cancellationToken: cancellationToken);
 
             return response.ResultCase switch
             {

@@ -15,8 +15,8 @@ Accept: application/json
 
     const items = data.items;
     if (items && items.length > 0) {
-        client.global.set("categoryId", items[2].categoryId);
-        console.log("Saved categoryId =", items[2].categoryId);
+        client.global.set("categoryId", items[0].categoryId);
+        console.log("Saved categoryId =", items[0].categoryId);
     } else {
         console.warn("Strano sulla mia macchina funzionava cit.");
     }
@@ -33,7 +33,7 @@ Content-Type: application/json
   "categoryId": "{{categoryId}}",
   "price": 79.90,
   "stock": 100,
-  "sku": "g.lavespa+{{$timestamp}}@example.com"
+  "sku": "IPH{{$timestamp}}"
 }
 
 > {% client.global.set("productId", response.body.productId); %}

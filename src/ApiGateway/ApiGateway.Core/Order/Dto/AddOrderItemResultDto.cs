@@ -1,4 +1,4 @@
-namespace ApiGateway.Core.Order;
+namespace ApiGateway.Core.Order.Dto;
 
 /// <summary>
 /// Result of adding an item to an order

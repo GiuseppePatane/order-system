@@ -6,7 +6,7 @@
 @addressId = {{addressId}}
 
 ### Get first available product (paged)
-GET {{baseUrl}}/api/products/1/10
+GET {{baseUrl}}/api/products/1/1
 Accept: application/json
 
 > {%
@@ -20,8 +20,8 @@ Accept: application/json
 
     const items = data.items;
     if (items && items.length > 0) {
-        client.global.set("productId", items[2].productId);
-        console.log("Saved productId =", items[2].productId);
+        client.global.set("productId", items[0].productId);
+        console.log("Saved productId =", items[0].productId);
     } else {
         console.warn("Strano sulla mia macchina funzionava cit.");
     }
@@ -39,12 +39,11 @@ Content-Type: application/json
   "userId": "{{userId}}",
   "shippingAddressId": "{{addressId}}",
   "billingAddressId": "{{addressId}}",
-  "items": [
+  "firstItem": 
     {
       "productId": "{{productId}}",
-      "quantity": 1
+      "quantity": 10
     }
-  ]
 }
 
 

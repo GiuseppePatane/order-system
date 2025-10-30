@@ -28,10 +28,15 @@ public class Base : ControllerBase
 
         var (statusCode, type) = error.Code switch
         {
-            // Adrress
+            //todo: magic numbers to constants
+            // Address
             "ADDRESS_NOT_FOUND" or "NOT_FOUND" => (
                 StatusCodes.Status404NotFound,
                 "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.4"
+            ),
+            "SHIPPING_ADDRESS_USER_MISMATCH"=> (
+                StatusCodes.Status400BadRequest,
+                "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.1"
             ),
             "INVALID_ADDRESS_ID" => (
                 StatusCodes.Status400BadRequest,

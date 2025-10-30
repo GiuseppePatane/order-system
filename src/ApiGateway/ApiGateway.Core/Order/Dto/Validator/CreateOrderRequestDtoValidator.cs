@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace ApiGateway.Core.Order.Validator;
+namespace ApiGateway.Core.Order.Dto.Validator;
 
 public class CreateOrderRequestDtoValidator : AbstractValidator<CreateOrderRequestDto>
 {
@@ -14,13 +14,14 @@ public class CreateOrderRequestDtoValidator : AbstractValidator<CreateOrderReque
             .NotEmpty()
             .WithMessage("ShippingAddressId is required");
 
-        RuleFor(x => x.Items)
+        RuleFor(x => x.FirstItem)
             .NotNull()
             .WithMessage("Items list is required")
             .NotEmpty()
             .WithMessage("At least one item is required in the order");
+        
 
-        RuleForEach(x => x.Items)
+        RuleFor(x => x.FirstItem)
             .SetValidator(new OrderItemDtoValidator());
     }
 }

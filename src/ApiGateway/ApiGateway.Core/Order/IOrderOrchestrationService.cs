@@ -1,4 +1,5 @@
 using ApiGateway.Core.Common;
+using ApiGateway.Core.Order.Dto;
 
 namespace ApiGateway.Core.Order;
 
@@ -7,10 +8,6 @@ namespace ApiGateway.Core.Order;
 /// </summary>
 public interface IOrderOrchestrationService
 {
-    /// <summary>
-    /// Creates an order after validating user and products exist
-    /// </summary>
-    Task<ServiceResult<OrderDto>> CreateOrderAsync(CreateOrderRequestDto request, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets an order by ID
@@ -22,19 +19,25 @@ public interface IOrderOrchestrationService
     /// </summary>
     Task<ServiceResult<List<OrderDto>>> GetUserOrdersAsync(string userId, CancellationToken cancellationToken = default);
 
+    
     /// <summary>
-    /// Cancels an order
+    /// Creates an order after validating user and products exist
     /// </summary>
-    Task<ServiceResult<OrderDto>> CancelOrderAsync(string orderId, string? reason = null, CancellationToken cancellationToken = default);
-
+    Task<ServiceResult<OrderMutationResponseDto>> CreateOrderAsync(CreateOrderRequestDto request, CancellationToken cancellationToken = default);
+    
     /// <summary>
     /// Updates order status
     /// </summary>
-    Task<ServiceResult<OrderDto>> UpdateOrderStatusAsync(string orderId, string newStatus, CancellationToken cancellationToken = default);
-
+    Task<ServiceResult<OrderMutationResponseDto>> UpdateOrderStatusAsync(string orderId, string newStatus, CancellationToken cancellationToken = default);
+    
+    /// <summary>
+    /// Cancels an order
+    /// </summary>
+    Task<ServiceResult<OrderMutationResponseDto>> CancelOrderAsync(string orderId, string? reason = null, CancellationToken cancellationToken = default);
+    
     /// <summary>
     /// Adds an item to an existing order with server-validated price
     /// </summary>
-    Task<ServiceResult<AddOrderItemResultDto>> AddOrderItemAsync(string orderId, AddOrderItemRequestDto request, CancellationToken cancellationToken = default);
+    Task<ServiceResult<AddOrderItemResultDto>> AddOrderItemAsync(string orderId, OrderItemDto request, CancellationToken cancellationToken = default);
 }
 

@@ -19,9 +19,10 @@ public static class DbInitializer
             logger.LogInformation("Checking for pending migrations...");
             var pendingMigrations = await context.Database.GetPendingMigrationsAsync();
 
-            if (pendingMigrations.Any())
+            var migrations = pendingMigrations.ToList();
+            if (migrations.Any())
             {
-                logger.LogInformation("Applying {Count} pending migrations...", pendingMigrations.Count());
+                logger.LogInformation("Applying {Count} pending migrations...", migrations.Count());
                 await context.Database.MigrateAsync();
                 logger.LogInformation("Migrations applied successfully.");
             }
@@ -74,13 +75,7 @@ public static class DbInitializer
         var categoryData = new[]
         {
             ("Electronics", "Electronic devices and accessories"),
-            ("Computers", "Laptops, desktops, and computer peripherals"),
             ("Mobile Phones", "Smartphones and mobile accessories"),
-            ("Gaming", "Gaming consoles, games, and accessories"),
-            ("Audio", "Headphones, speakers, and audio equipment"),
-            ("Cameras", "Digital cameras and photography equipment"),
-            ("Smart Home", "Smart home devices and IoT products"),
-            ("Wearables", "Smartwatches and fitness trackers")
         };
 
         foreach (var (name, description) in categoryData)
@@ -110,17 +105,7 @@ public static class DbInitializer
             ("Wireless Mouse", "Ergonomic Wireless Mouse with USB Receiver", 24.99m, 300),
             ("Mechanical Keyboard", "RGB Mechanical Gaming Keyboard", 129.99m, 75)
         }));
-
-        // Computers products
-        var computersCategory = categories.First(c => c.Name == "Computers");
-        products.AddRange(CreateProductsForCategory(computersCategory, new[]
-        {
-            ("Gaming Laptop", "High-performance gaming laptop with RTX 4070", 1899.99m, 15),
-            ("Ultrabook", "Thin and light ultrabook for professionals", 1299.99m, 30),
-            ("Desktop PC", "Custom built desktop PC for gaming", 2499.99m, 10),
-            ("Monitor 27\"", "4K IPS Monitor with HDR support", 449.99m, 45),
-            ("External SSD 1TB", "Fast external SSD with USB 3.2", 89.99m, 120)
-        }));
+        
 
         // Mobile Phones products
         var mobilesCategory = categories.First(c => c.Name == "Mobile Phones");
@@ -132,61 +117,8 @@ public static class DbInitializer
             ("Screen Protector", "Tempered glass screen protector", 9.99m, 600),
             ("Wireless Charger", "Fast wireless charging pad", 34.99m, 200)
         }));
-
-        // Gaming products
-        var gamingCategory = categories.First(c => c.Name == "Gaming");
-        products.AddRange(CreateProductsForCategory(gamingCategory, new[]
-        {
-            ("Gaming Console", "Next-gen gaming console", 499.99m, 20),
-            ("Gaming Headset", "7.1 Surround sound gaming headset", 79.99m, 80),
-            ("Controller", "Wireless gaming controller", 59.99m, 100),
-            ("Racing Wheel", "Force feedback racing wheel", 299.99m, 25),
-            ("VR Headset", "Virtual reality headset bundle", 399.99m, 30)
-        }));
-
-        // Audio products
-        var audioCategory = categories.First(c => c.Name == "Audio");
-        products.AddRange(CreateProductsForCategory(audioCategory, new[]
-        {
-            ("Noise Cancelling Headphones", "Premium noise cancelling headphones", 349.99m, 60),
-            ("Earbuds", "True wireless earbuds with ANC", 149.99m, 200),
-            ("Soundbar", "Home theater soundbar with subwoofer", 399.99m, 35),
-            ("Studio Monitors", "Professional studio monitor speakers", 599.99m, 20),
-            ("Microphone", "USB condenser microphone for streaming", 129.99m, 75)
-        }));
-
-        // Cameras products
-        var camerasCategory = categories.First(c => c.Name == "Cameras");
-        products.AddRange(CreateProductsForCategory(camerasCategory, new[]
-        {
-            ("Mirrorless Camera", "Professional mirrorless camera body", 1799.99m, 15),
-            ("DSLR Camera", "Entry-level DSLR camera kit", 699.99m, 25),
-            ("Action Camera", "4K action camera with waterproof case", 299.99m, 50),
-            ("Tripod", "Professional carbon fiber tripod", 149.99m, 60),
-            ("Camera Lens 50mm", "Prime lens f/1.8 for portraits", 199.99m, 40)
-        }));
-
-        // Smart Home products
-        var smartHomeCategory = categories.First(c => c.Name == "Smart Home");
-        products.AddRange(CreateProductsForCategory(smartHomeCategory, new[]
-        {
-            ("Smart Speaker", "Voice assistant smart speaker", 99.99m, 150),
-            ("Smart Light Bulb", "WiFi RGB smart light bulb", 19.99m, 300),
-            ("Security Camera", "Indoor WiFi security camera", 49.99m, 100),
-            ("Smart Thermostat", "WiFi programmable thermostat", 179.99m, 50),
-            ("Smart Plug", "WiFi smart plug with energy monitoring", 24.99m, 200)
-        }));
-
-        // Wearables products
-        var wearablesCategory = categories.First(c => c.Name == "Wearables");
-        products.AddRange(CreateProductsForCategory(wearablesCategory, new[]
-        {
-            ("Smartwatch", "Premium smartwatch with fitness tracking", 399.99m, 80),
-            ("Fitness Tracker", "Activity and sleep tracker band", 79.99m, 150),
-            ("Smart Ring", "Health monitoring smart ring", 299.99m, 40),
-            ("Smart Glasses", "AR smart glasses for daily use", 499.99m, 20),
-            ("Heart Rate Monitor", "Chest strap heart rate monitor", 59.99m, 100)
-        }));
+        
+        
 
         return products;
     }
@@ -196,7 +128,6 @@ public static class DbInitializer
         (string Name, string Description, decimal Price, int Stock)[] productData)
     {
         var products = new List<Core.Domain.Product>();
-        var faker = new Faker();
 
         foreach (var (name, description, price, stock) in productData)
         {
@@ -220,7 +151,7 @@ public static class DbInitializer
 
     private static string GenerateSku(string productName)
     {
-        // Generate SKU from product name: First 3 letters + random 6 digits
+        // Generate SKU from product name: First 3 letters + random 6 digits ( e.g., ELE-123456 )
         var prefix = new string(productName
             .Replace(" ", "")
             .Take(3)

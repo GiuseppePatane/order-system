@@ -1,9 +1,7 @@
-namespace ApiGateway.Core.Order;
+namespace ApiGateway.Core.Order.Dto;
 
-/// <summary>
-/// Order item from client - only ProductId and Quantity
-/// </summary>
-public abstract class OrderItemDto
+
+public class OrderItemDto
 {
     public Guid ProductId { get; set; }
     public int Quantity { get; set; }

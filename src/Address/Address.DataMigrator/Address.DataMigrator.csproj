@@ -19,7 +19,6 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Address.Infrastructure\Address.Infrastructure.csproj" />
-      <ProjectReference Include="..\..\Shared\Shared.DataMigrator\Shared.DataMigrator.csproj" />
     </ItemGroup>
 
 </Project>

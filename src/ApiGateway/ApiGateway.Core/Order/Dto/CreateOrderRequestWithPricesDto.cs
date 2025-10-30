@@ -1,4 +1,4 @@
-namespace ApiGateway.Core.Order;
+namespace ApiGateway.Core.Order.Dto;
 
 /// <summary>
 /// Internal DTO with prices retrieved from ProductService (server-side)

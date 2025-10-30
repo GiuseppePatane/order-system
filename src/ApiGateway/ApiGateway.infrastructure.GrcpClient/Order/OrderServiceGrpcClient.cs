@@ -1,5 +1,6 @@
 using ApiGateway.Core.Common;
 using ApiGateway.Core.Order;
+using ApiGateway.Core.Order.Dto;
 using Microsoft.Extensions.Logging;
 using Order.Protos;
 
@@ -203,6 +204,7 @@ public class OrderServiceGrpcClient : IOrderServiceClient
             });
         }
     }
+    
 
     private OrderDto MapToOrderDto(OrderData data)
     {
@@ -238,7 +240,7 @@ public class OrderServiceGrpcClient : IOrderServiceClient
         };
     }
 
-    public async Task<ServiceResult<AddOrderItemResultDto>> AddOrderItem(string orderId, AddOrderItemWithPriceDto request)
+    public async Task<ServiceResult<AddOrderItemResultDto>> AddOrderItem(string orderId, OrderItemWithPriceDto request)
     {
         try
         {
@@ -247,7 +249,7 @@ public class OrderServiceGrpcClient : IOrderServiceClient
                 OrderId = orderId,
                 ProductId = request.ProductId.ToString(),
                 Quantity = request.Quantity,
-                UnitPrice = (double)request.UnitPrice
+                UnitPrice = (double)request.LockedPrice
             };
 
             var response = await _grpcClient.AddOrderItemAsync(grpcRequest);

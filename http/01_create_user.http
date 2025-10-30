@@ -33,3 +33,7 @@ Content-Type: application/json
   "lastName": "Lavespa Updated"
 
 }
+
+
+###  Delete User
+DELETE {{baseUrl}}/api/users/{{userId}}
