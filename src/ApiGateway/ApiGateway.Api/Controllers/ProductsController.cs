@@ -97,7 +97,6 @@ public class ProductsController : Base
     [ProducesResponseType(typeof(ProductMutationResultDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    [ValidationFilter]
     public async Task<IActionResult> CreateProduct([FromBody] CreateProductRequestDto request)
     {
         var result = await _productServiceClient.CreateProduct(request);

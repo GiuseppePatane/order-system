@@ -30,6 +30,6 @@ Content-Type: application/json
 
 {
   "firstName": "Guido",
-  "lastName": "Lavespa Updated",
-  "email": "g.lavespa.updated@example.com"
+  "lastName": "Lavespa Updated"
+
 }

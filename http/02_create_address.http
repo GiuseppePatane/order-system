@@ -7,8 +7,8 @@ Content-Type: application/json
 
 {
   "userId": "{{userId}}",
-  "street": "Via Roma 1",
-  "city": "Catania",
+  "street": "Via Etnea 45",
+  "city": "Milo",
   "state": "CT",
   "postalCode": "95100",
   "country": "IT",
@@ -37,9 +37,9 @@ Content-Type: application/json
 
 {
   "street": "Via Roma 123",
-  "city": "Palermo",
-  "state": "PA",
-  "postalCode": "90100",
+  "city": "Zafferana Etnea",
+  "state": "CT",
+  "postalCode": "95019",
   "country": "IT",
   "label": "Casa Updated"
 }

@@ -128,7 +128,6 @@ public class AddressesController : Base
     [ProducesResponseType(typeof(AddressDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    [ValidationFilter]
     public async Task<IActionResult> CreateAddress([FromBody] CreateAddressRequestDto request)
     {
         var result = await _addressServiceClient.CreateAddress(request);
@@ -155,7 +154,6 @@ public class AddressesController : Base
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    [ValidationFilter]
     public async Task<IActionResult> UpdateAddress(string id, [FromBody] UpdateAddressRequestDto request)
     {
         request = request with { AddressId = id };

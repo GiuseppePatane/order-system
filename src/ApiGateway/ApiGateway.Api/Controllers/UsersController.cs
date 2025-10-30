@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ApiGateway.Api.Controllers;
 
-
 [ApiController]
 [Route("api/users")]
 [Produces("application/json")]
@@ -14,9 +13,8 @@ public class UsersController : Base
     private readonly IUserServiceClient _userServiceClient;
     private readonly ILogger<UsersController> _logger;
 
-    public UsersController(
-        IUserServiceClient userServiceClient,
-        ILogger<UsersController> logger) : base(logger)
+    public UsersController(IUserServiceClient userServiceClient, ILogger<UsersController> logger)
+        : base(logger)
     {
         _userServiceClient = userServiceClient;
         _logger = logger;
@@ -44,10 +42,39 @@ public class UsersController : Base
             return Ok(result.Data);
         }
 
-
         return MapErrorToProblemDetails(result.Error!);
     }
 
+    /// <summary>
+    /// Retrieves a paginated list of users
+    /// </summary>
+    /// <param name="pageNumber">Page number (default: 1)</param>
+    /// <param name="pageSize">Page size (default: 10, max: 100)</param>
+    /// <param name="searchTerm">Optional search term for user name or email</param>
+    /// <returns>A paginated list of users</returns>
+    /// <response code="200">Returns the paginated user list</response>
+    [HttpGet("{pageNumber}/{pageSize}")]
+    [ProducesResponseType(typeof(PagedUsersDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> GetUsers(
+        [FromRoute] int pageNumber = 1,
+        [FromRoute] int pageSize = 10,
+        [FromQuery] string? searchTerm = null
+    )
+    {
+        var request = new GetUsersRequestDto
+        {
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+            SearchTerm = searchTerm,
+        };
+
+        var result = await _userServiceClient.GetUsers(request);
+        if (result.IsSuccess && result.Data != null)
+            return Ok(result.Data);
+
+        return MapErrorToProblemDetails(result.Error!);
+    }
 
     /// <summary>
     /// Creates a new user
@@ -71,35 +98,6 @@ public class UsersController : Base
         return MapErrorToProblemDetails(result.Error!);
     }
 
-
-    /// <summary>
-    /// Retrieves a paginated list of users
-    /// </summary>
-    /// <param name="pageNumber">Page number (default: 1)</param>
-    /// <param name="pageSize">Page size (default: 10, max: 100)</param>
-    /// <param name="searchTerm">Optional search term for user name or email</param>
-    /// <returns>A paginated list of users</returns>
-    /// <response code="200">Returns the paginated user list</response>
-    [HttpGet("{pageNumber}/{pageSize}")]
-    [ProducesResponseType(typeof(PagedUsersDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetUsers([FromRoute] int pageNumber = 1, [FromRoute] int pageSize = 10, [FromQuery] string? searchTerm = null)
-    {
-        var request = new GetUsersRequestDto
-        {
-            PageNumber = pageNumber,
-            PageSize = pageSize,
-            SearchTerm = searchTerm
-        };
-
-        var result = await _userServiceClient.GetUsers(request);
-        if (result.IsSuccess && result.Data != null)
-            return Ok(result.Data);
-
-        return MapErrorToProblemDetails(result.Error!);
-    }
-
-
     /// <summary>
     /// Updates an existing user
     /// </summary>
@@ -114,9 +112,12 @@ public class UsersController : Base
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> UpdateUser([FromRoute]string id, [FromBody] UpdateUserRequestDto request)
+    public async Task<IActionResult> UpdateUser(
+        [FromRoute] string id,
+        [FromBody] UpdateUserRequestDto request
+    )
     {
-        var result = await _userServiceClient.UpdateUser(id,request);
+        var result = await _userServiceClient.UpdateUser(id, request);
         if (result.IsSuccess && result.Data != null)
             return Ok(result.Data);
 
