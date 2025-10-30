@@ -9,14 +9,14 @@ namespace ApiGateway.Api.Controllers;
 [ApiController]
 [Route("api/users")]
 [Produces("application/json")]
-public class UsersController : ControllerBase
+public class UsersController : Base
 {
     private readonly IUserServiceClient _userServiceClient;
     private readonly ILogger<UsersController> _logger;
 
     public UsersController(
         IUserServiceClient userServiceClient,
-        ILogger<UsersController> logger)
+        ILogger<UsersController> logger) : base(logger)
     {
         _userServiceClient = userServiceClient;
         _logger = logger;
@@ -141,38 +141,5 @@ public class UsersController : ControllerBase
             return NoContent();
 
         return MapErrorToProblemDetails(result.Error!);
-    }
-
-    //todo: da portare su shared 
-    private IActionResult MapErrorToProblemDetails(ErrorInfo error)
-    {
-        var problemDetails = new ProblemDetails
-        {
-            Title = error.Code,
-            Detail = error.Message,
-            Extensions = { ["errorCode"] = error.Code }
-        };
-
-        if (error.Details != null && error.Details.Count > 0)
-        {
-            problemDetails.Extensions["additionalDetails"] = error.Details;
-        }
-
-        var (statusCode, type) = error.Code switch
-        {
-            "USER_NOT_FOUND" => (StatusCodes.Status404NotFound, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.4"),
-            "INVALID_USER_ID" => (StatusCodes.Status400BadRequest, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.1"),
-            "INVALID_ARGUMENT" => (StatusCodes.Status400BadRequest, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.1"),
-            "GRPC_ERROR" => (StatusCodes.Status503ServiceUnavailable, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.6.4"),
-            "EMPTY_RESPONSE" => (StatusCodes.Status502BadGateway, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.6.3"),
-            _ => (StatusCodes.Status500InternalServerError, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.6.1")
-        };
-
-        problemDetails.Status = statusCode;
-        problemDetails.Type = type;
-
-        _logger.LogWarning("Returning error response: {Code} with HTTP status {StatusCode}", error.Code, statusCode);
-
-        return StatusCode(statusCode, problemDetails);
     }
 }

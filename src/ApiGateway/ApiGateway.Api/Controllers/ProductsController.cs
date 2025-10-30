@@ -9,7 +9,7 @@ namespace ApiGateway.Api.Controllers;
 [ApiController]
 [Route("api/products")]
 [Produces("application/json")]
-public class ProductsController : ControllerBase
+public class ProductsController : Base
 {
     private readonly IProductServiceClient _productServiceClient;
     private readonly ILogger<ProductsController> _logger;
@@ -18,9 +18,47 @@ public class ProductsController : ControllerBase
         IProductServiceClient productServiceClient,
         ILogger<ProductsController> logger
     )
+        : base(logger)
     {
         _productServiceClient = productServiceClient;
         _logger = logger;
+    }
+
+    /// <summary>
+    /// Retrieves a paginated list of products
+    /// </summary>
+    /// <param name="pageNumber">Page number (default: 1)</param>
+    /// <param name="pageSize">Page size (default: 10, max: 100)</param>
+    /// <param name="categoryId">Optional category filter (GUID)</param>
+    /// <param name="searchTerm">Optional search term for product name/description</param>
+    /// <param name="isActive">Optional filter for active products</param>
+    /// <returns>A paginated list of products</returns>
+    /// <response code="200">Returns the paginated product list</response>
+    [HttpGet("{pageNumber}/{pageSize}")]
+    [ProducesResponseType(typeof(PagedProductsDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> GetProducts(
+        [FromRoute] int pageNumber = 1,
+        [FromRoute] int pageSize = 10,
+        [FromQuery] string? categoryId = null,
+        [FromQuery] string? searchTerm = null,
+        [FromQuery] bool? isActive = null
+    )
+    {
+        var request = new GetProductsRequestDto
+        {
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+            CategoryId = categoryId,
+            IsActive = isActive,
+            SearchTerm = searchTerm,
+        };
+
+        var result = await _productServiceClient.GetProducts(request);
+        if (result.IsSuccess && result.Data != null)
+            return Ok(result.Data);
+
+        return MapErrorToProblemDetails(result.Error!);
     }
 
     /// <summary>
@@ -71,43 +109,6 @@ public class ProductsController : ControllerBase
                 result.Data
             );
         }
-
-        return MapErrorToProblemDetails(result.Error!);
-    }
-
-    /// <summary>
-    /// Retrieves a paginated list of products
-    /// </summary>
-    /// <param name="pageNumber">Page number (default: 1)</param>
-    /// <param name="pageSize">Page size (default: 10, max: 100)</param>
-    /// <param name="categoryId">Optional category filter (GUID)</param>
-    /// <param name="searchTerm">Optional search term for product name/description</param>
-    /// <param name="isActive">Optional filter for active products</param>
-    /// <returns>A paginated list of products</returns>
-    /// <response code="200">Returns the paginated product list</response>
-    [HttpGet("{pageNumber}/{pageSize}")]
-    [ProducesResponseType(typeof(PagedProductsDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetProducts(
-        [FromRoute] int pageNumber = 1,
-        [FromRoute] int pageSize = 10,
-        [FromQuery] string? categoryId = null,
-        [FromQuery] string? searchTerm = null,
-        [FromQuery] bool? isActive = null
-    )
-    {
-        var request = new GetProductsRequestDto
-        {
-            PageNumber = pageNumber,
-            PageSize = pageSize,
-            CategoryId = categoryId,
-            IsActive = isActive,
-            SearchTerm = searchTerm,
-        };
-
-        var result = await _productServiceClient.GetProducts(request);
-        if (result.IsSuccess && result.Data != null)
-            return Ok(result.Data);
 
         return MapErrorToProblemDetails(result.Error!);
     }
@@ -184,60 +185,5 @@ public class ProductsController : ControllerBase
             return Ok(result.Data);
 
         return MapErrorToProblemDetails(result.Error!);
-    }
-
-    //todo: move to a shared
-    private IActionResult MapErrorToProblemDetails(ErrorInfo error)
-    {
-        var problemDetails = new ProblemDetails
-        {
-            Title = error.Code,
-            Detail = error.Message,
-            Extensions = { ["errorCode"] = error.Code },
-        };
-
-        if (error.Details != null && error.Details.Count > 0)
-        {
-            problemDetails.Extensions["additionalDetails"] = error.Details;
-        }
-
-        var (statusCode, type) = error.Code switch
-        {
-            "PRODUCT_NOT_FOUND" => (
-                StatusCodes.Status404NotFound,
-                "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.4"
-            ),
-            "INVALID_PRODUCT_ID" => (
-                StatusCodes.Status400BadRequest,
-                "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.1"
-            ),
-            "GRPC_ERROR" => (
-                StatusCodes.Status503ServiceUnavailable,
-                "https://datatracker.ietf.org/doc/html/rfc7231#section-6.6.4"
-            ),
-            "INVALID_ARGUMENT" => (
-                StatusCodes.Status400BadRequest,
-                "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.1"
-            ),
-            "EMPTY_RESPONSE" => (
-                StatusCodes.Status502BadGateway,
-                "https://datatracker.ietf.org/doc/html/rfc7231#section-6.6.3"
-            ),
-            _ => (
-                StatusCodes.Status500InternalServerError,
-                "https://datatracker.ietf.org/doc/html/rfc7231#section-6.6.1"
-            ),
-        };
-
-        problemDetails.Status = statusCode;
-        problemDetails.Type = type;
-
-        _logger.LogWarning(
-            "Returning error response: {Code} with HTTP status {StatusCode}",
-            error.Code,
-            statusCode
-        );
-
-        return StatusCode(statusCode, problemDetails);
     }
 }

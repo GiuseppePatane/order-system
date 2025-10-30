@@ -1,3 +1,4 @@
+using ApiGateway.Api.Filters;
 using ApiGateway.Core.Common;
 using ApiGateway.Core.Address;
 using ApiGateway.Core.Address.Dto;
@@ -11,13 +12,13 @@ namespace ApiGateway.Api.Controllers;
 [ApiController]
 [Route("api/addresses")]
 [Produces("application/json")]
-public class AddressesController : ControllerBase
+public class AddressesController : Base
 {
     private readonly IAddressServiceClient _addressServiceClient;
     private readonly ILogger<AddressesController> _logger;
     public AddressesController(
         IAddressServiceClient addressServiceClient,
-        ILogger<AddressesController> logger)
+        ILogger<AddressesController> logger) : base(logger)
     {
         _addressServiceClient = addressServiceClient;
         _logger = logger;
@@ -127,6 +128,7 @@ public class AddressesController : ControllerBase
     [ProducesResponseType(typeof(AddressDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    [ValidationFilter]
     public async Task<IActionResult> CreateAddress([FromBody] CreateAddressRequestDto request)
     {
         var result = await _addressServiceClient.CreateAddress(request);
@@ -153,6 +155,7 @@ public class AddressesController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    [ValidationFilter]
     public async Task<IActionResult> UpdateAddress(string id, [FromBody] UpdateAddressRequestDto request)
     {
         request = request with { AddressId = id };
@@ -206,34 +209,5 @@ public class AddressesController : ControllerBase
         return MapErrorToProblemDetails(result.Error!);
     }
 
-    private IActionResult MapErrorToProblemDetails(ErrorInfo error)
-    {
-        var problemDetails = new ProblemDetails
-        {
-            Title = error.Code,
-            Detail = error.Message,
-            Extensions = { ["errorCode"] = error.Code }
-        };
-
-        if (error.Details != null && error.Details.Count > 0)
-        {
-            problemDetails.Extensions["additionalDetails"] = error.Details;
-        }
-
-        var (statusCode, type) = error.Code switch
-        {
-            "ADDRESS_NOT_FOUND" or "NOT_FOUND" => (StatusCodes.Status404NotFound, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.4"),
-            "INVALID_ADDRESS_ID" or "INVALID_ARGUMENT" => (StatusCodes.Status400BadRequest, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.1"),
-            "GRPC_ERROR" => (StatusCodes.Status503ServiceUnavailable, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.6.4"),
-            "EMPTY_RESPONSE" => (StatusCodes.Status502BadGateway, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.6.3"),
-            _ => (StatusCodes.Status500InternalServerError, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.6.1")
-        };
-
-        problemDetails.Status = statusCode;
-        problemDetails.Type = type;
-
-        _logger.LogWarning("Returning error response: {Code} with HTTP status {StatusCode}", error.Code, statusCode);
-
-        return StatusCode(statusCode, problemDetails);
-    }
+  
 }

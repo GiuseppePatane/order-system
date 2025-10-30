@@ -6,7 +6,7 @@ namespace ApiGateway.Api.Controllers;
 
 [ApiController]
 [Route("api/orders")]
-public class OrdersController : ControllerBase
+public class OrdersController : Base
 {
     private readonly IOrderOrchestrationService _orderOrchestration;
     private readonly IOrderServiceClient _orderClient;
@@ -15,7 +15,7 @@ public class OrdersController : ControllerBase
     public OrdersController(
         IOrderOrchestrationService orderOrchestration,
         IOrderServiceClient orderClient,
-        ILogger<OrdersController> logger)
+        ILogger<OrdersController> logger) : base(logger)
     {
         _orderOrchestration = orderOrchestration;
         _orderClient = orderClient;
@@ -240,40 +240,7 @@ public class OrdersController : ControllerBase
         return MapErrorToProblemDetails(result.Error!);
     }
 
-    private IActionResult MapErrorToProblemDetails(ApiGateway.Core.Common.ErrorInfo error)
-    {
-        var problemDetails = new ProblemDetails
-        {
-            Title = error.Code,
-            Detail = error.Message,
-            Extensions = { ["errorCode"] = error.Code }
-        };
-
-        if (error.Details != null && error.Details.Count > 0)
-        {
-            problemDetails.Extensions["additionalDetails"] = error.Details;
-        }
-
-        var (statusCode, type) = error.Code switch
-        {
-            "ORDER_NOT_FOUND" or "USER_NOT_FOUND" or "PRODUCT_NOT_FOUND" =>
-                (StatusCodes.Status404NotFound, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.4"),
-            "PRODUCT_VALIDATION_FAILED" or "INVALID_ORDER_DATA" or "PRODUCT_ALREADY_IN_ORDER" or "STOCK_LOCK_FAILED" =>
-                (StatusCodes.Status400BadRequest, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.1"),
-           "INVALID_ARGUMENT" => (StatusCodes.Status400BadRequest, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.1"),
-            "ORDER_CREATION_FAILED" or "ADD_ITEM_FAILED" =>
-                (StatusCodes.Status500InternalServerError, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.6.1"),
-            _ => (StatusCodes.Status500InternalServerError, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.6.1")
-        };
-
-        problemDetails.Status = statusCode;
-        problemDetails.Type = type;
-
-        _logger.LogWarning("Returning error response: {Code} with HTTP status {StatusCode}", 
-            error.Code, statusCode);
-
-        return StatusCode(statusCode, problemDetails);
-    }
+ 
 }
 
 
