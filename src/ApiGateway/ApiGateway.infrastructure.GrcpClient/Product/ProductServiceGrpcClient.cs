@@ -1,5 +1,6 @@
 using ApiGateway.Core.Common;
 using ApiGateway.Core.Product;
+using ApiGateway.Core.Product.Dto;
 using Grpc.Core;
 using Microsoft.Extensions.Logging;
 using Products;
@@ -75,7 +76,7 @@ public class ProductServiceGrpcClient : IProductServiceClient
         }
     }
 
-    public async Task<ServiceResult<ProductDto>> CreateProduct(CreateProductRequestDto requestDto)
+    public async Task<ServiceResult<ProductMutationResultDto>> CreateProduct(CreateProductRequestDto requestDto)
     {
         try
         {
@@ -93,15 +94,16 @@ public class ProductServiceGrpcClient : IProductServiceClient
 
             return response.ResultCase switch
             {
-                ProductResponse.ResultOneofCase.Data => ServiceResult<ProductDto>.Success(MapToDto(response.Data)),
-                ProductResponse.ResultOneofCase.Error => ServiceResult<ProductDto>.Failure(MapToErrorInfo(response.Error)),
-                _ => ServiceResult<ProductDto>.Failure(new ErrorInfo { Code = "EMPTY_RESPONSE", Message = "Empty response from gRPC" })
+                ProductResponse.ResultOneofCase.Data => ServiceResult<ProductMutationResultDto>.Success(
+                    new ProductMutationResultDto(response.Data.ProductId)),
+                ProductResponse.ResultOneofCase.Error => ServiceResult<ProductMutationResultDto>.Failure(MapToErrorInfo(response.Error)),
+                _ => ServiceResult<ProductMutationResultDto>.Failure(new ErrorInfo { Code = "EMPTY_RESPONSE", Message = "Empty response from gRPC" })
             };
         }
         catch (RpcException ex)
         {
             _logger.LogError(ex, "gRPC CreateProduct failed");
-            return ServiceResult<ProductDto>.Failure(new ErrorInfo { Code = "GRPC_ERROR", Message = ex.Status.Detail });
+            return ServiceResult<ProductMutationResultDto>.Failure(new ErrorInfo { Code = "GRPC_ERROR", Message = ex.Status.Detail });
         }
     }
 
@@ -140,13 +142,13 @@ public class ProductServiceGrpcClient : IProductServiceClient
         }
     }
 
-    public async Task<ServiceResult<ProductDto>> UpdateProduct(UpdateProductRequestDto dto)
+    public async Task<ServiceResult<ProductMutationResultDto>> UpdateProduct(string productId, UpdateProductRequestDto dto)
     {
         try
         {
             var request = new UpdateProductRequest
             {
-                ProductId = dto.ProductId
+                ProductId = productId
             };
 
             if (!string.IsNullOrWhiteSpace(dto.Name)) request.Name = dto.Name;
@@ -159,19 +161,20 @@ public class ProductServiceGrpcClient : IProductServiceClient
 
             return response.ResultCase switch
             {
-                ProductResponse.ResultOneofCase.Data => ServiceResult<ProductDto>.Success(MapToDto(response.Data)),
-                ProductResponse.ResultOneofCase.Error => ServiceResult<ProductDto>.Failure(MapToErrorInfo(response.Error)),
-                _ => ServiceResult<ProductDto>.Failure(new ErrorInfo { Code = "EMPTY_RESPONSE", Message = "Empty response from gRPC" })
+                ProductResponse.ResultOneofCase.Data => ServiceResult<ProductMutationResultDto>.Success(
+                    new ProductMutationResultDto(response.Data.ProductId)),
+                ProductResponse.ResultOneofCase.Error => ServiceResult<ProductMutationResultDto>.Failure(MapToErrorInfo(response.Error)),
+                _ => ServiceResult<ProductMutationResultDto>.Failure(new ErrorInfo { Code = "EMPTY_RESPONSE", Message = "Empty response from gRPC" })
             };
         }
         catch (RpcException ex)
         {
             _logger.LogError(ex, "gRPC UpdateProduct failed");
-            return ServiceResult<ProductDto>.Failure(new ErrorInfo { Code = "GRPC_ERROR", Message = ex.Status.Detail });
+            return ServiceResult<ProductMutationResultDto>.Failure(new ErrorInfo { Code = "GRPC_ERROR", Message = ex.Status.Detail });
         }
     }
 
-    public async Task<ServiceResult<DeleteProductResultDto>> DeleteProduct(string productId)
+    public async Task<ServiceResult<ProductMutationResultDto>> DeleteProduct(string productId)
     {
         try
         {
@@ -180,15 +183,15 @@ public class ProductServiceGrpcClient : IProductServiceClient
 
             return response.ResultCase switch
             {
-                DeleteProductResponse.ResultOneofCase.Data => ServiceResult<DeleteProductResultDto>.Success(new DeleteProductResultDto { Success = response.Data.Success, ProductId = response.Data.ProductId }),
-                DeleteProductResponse.ResultOneofCase.Error => ServiceResult<DeleteProductResultDto>.Failure(MapToErrorInfo(response.Error)),
-                _ => ServiceResult<DeleteProductResultDto>.Failure(new ErrorInfo { Code = "EMPTY_RESPONSE", Message = "Empty response from gRPC" })
+                DeleteProductResponse.ResultOneofCase.Data => ServiceResult<ProductMutationResultDto>.Success(new ProductMutationResultDto (response.Data.ProductId)),
+                DeleteProductResponse.ResultOneofCase.Error => ServiceResult<ProductMutationResultDto>.Failure(MapToErrorInfo(response.Error)),
+                _ => ServiceResult<ProductMutationResultDto>.Failure(new ErrorInfo { Code = "EMPTY_RESPONSE", Message = "Empty response from gRPC" })
             };
         }
         catch (RpcException ex)
         {
             _logger.LogError(ex, "gRPC DeleteProduct failed");
-            return ServiceResult<DeleteProductResultDto>.Failure(new ErrorInfo { Code = "GRPC_ERROR", Message = ex.Status.Detail });
+            return ServiceResult<ProductMutationResultDto>.Failure(new ErrorInfo { Code = "GRPC_ERROR", Message = ex.Status.Detail });
         }
     }
 

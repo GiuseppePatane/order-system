@@ -1,12 +1,11 @@
 using ApiGateway.Core.Common;
 using ApiGateway.Core.User;
+using ApiGateway.Core.User.Dto;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ApiGateway.Api.Controllers;
 
-/// <summary>
-/// Manages user operations through the User gRPC service
-/// </summary>
+
 [ApiController]
 [Route("api/users")]
 [Produces("application/json")]
@@ -58,7 +57,7 @@ public class UsersController : ControllerBase
     /// <response code="201">User created successfully</response>
     /// <response code="400">Invalid user data or duplicate email</response>
     [HttpPost]
-    [ProducesResponseType(typeof(UserDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(UserMutationResultDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> CreateUser([FromBody] CreateUserRequestDto request)
@@ -138,12 +137,13 @@ public class UsersController : ControllerBase
     public async Task<IActionResult> DeleteUser(string id)
     {
         var result = await _userServiceClient.DeleteUser(id);
-        if (result.IsSuccess && result.Data != null && result.Data.Success)
+        if (result.IsSuccess)
             return NoContent();
 
         return MapErrorToProblemDetails(result.Error!);
     }
 
+    //todo: da portare su shared 
     private IActionResult MapErrorToProblemDetails(ErrorInfo error)
     {
         var problemDetails = new ProblemDetails

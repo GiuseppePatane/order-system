@@ -119,7 +119,7 @@ public class OrdersController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> CancelOrder(string id, [FromBody] CancelOrderRequest? request)
+    public async Task<IActionResult> CancelOrder(string id, [FromBody] CancelOrderRequestDto? request)
     {
         var result = await _orderOrchestration.CancelOrderAsync(id, request?.Reason);
 
@@ -144,9 +144,9 @@ public class OrdersController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> UpdateOrderStatus(string id, [FromBody] UpdateOrderStatusRequest request)
+    public async Task<IActionResult> UpdateOrderStatus(string id, [FromBody] UpdateOrderStatusRequestDto requestDto)
     {
-        var result = await _orderOrchestration.UpdateOrderStatusAsync(id, request.Status);
+        var result = await _orderOrchestration.UpdateOrderStatusAsync(id, requestDto.Status);
 
         if (result.IsSuccess && result.Data != null)
         {
@@ -225,12 +225,12 @@ public class OrdersController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> UpdateOrderItemQuantity(string orderId, string itemId, [FromBody] UpdateItemQuantityRequest request)
+    public async Task<IActionResult> UpdateOrderItemQuantity(string orderId, string itemId, [FromBody] UpdateItemQuantityRequestDto requestDto)
     {
         _logger.LogInformation("Updating item {ItemId} quantity in order {OrderId} to {NewQuantity}",
-            itemId, orderId, request.NewQuantity);
+            itemId, orderId, requestDto.NewQuantity);
 
-        var result = await _orderClient.UpdateOrderItemQuantity(orderId, itemId, request.NewQuantity);
+        var result = await _orderClient.UpdateOrderItemQuantity(orderId, itemId, requestDto.NewQuantity);
 
         if (result.IsSuccess && result.Data != null)
         {
@@ -276,7 +276,5 @@ public class OrdersController : ControllerBase
     }
 }
 
-public record CancelOrderRequest(string? Reason);
-public record UpdateOrderStatusRequest(string Status);
-public record UpdateItemQuantityRequest(int NewQuantity);
+
 

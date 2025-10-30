@@ -1,16 +1,20 @@
 using System.Reflection;
+using ApiGateway.Core.Product.Dto.Validator;
 using ApiGateway.infrastructure.GrcpClient.Extensions;
+using FluentValidation;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
+builder.Services.AddValidatorsFromAssemblyContaining<CreateProductRequestDtoValidator>();
 // Add services to the container.
 builder.Services.AddControllers();
 
 // Configure Problem Details (RFC 7807)
 builder.Services.AddProblemDetails();
+
 
 // Configure Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();

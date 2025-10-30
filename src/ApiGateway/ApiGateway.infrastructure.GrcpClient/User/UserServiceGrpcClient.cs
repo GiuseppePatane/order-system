@@ -1,5 +1,6 @@
 using ApiGateway.Core.Common;
 using ApiGateway.Core.User;
+using ApiGateway.Core.User.Dto;
 using Grpc.Core;
 using Microsoft.Extensions.Logging;
 using User.Protos;
@@ -87,7 +88,7 @@ public class UserServiceGrpcClient : IUserServiceClient
         }
     }
 
-    public async Task<ServiceResult<UserDto>> CreateUser(CreateUserRequestDto requestDto)
+    public async Task<ServiceResult<UserMutationResultDto>> CreateUser(CreateUserRequestDto requestDto)
     {
         try
         {
@@ -102,13 +103,13 @@ public class UserServiceGrpcClient : IUserServiceClient
 
             return response.ResultCase switch
             {
-                UserResponse.ResultOneofCase.Data => ServiceResult<UserDto>.Success(
-                    MapToDto(response.Data)
+                UserResponse.ResultOneofCase.Data => ServiceResult<UserMutationResultDto>.Success(
+                    new UserMutationResultDto(response.Data.UserId)
                 ),
-                UserResponse.ResultOneofCase.Error => ServiceResult<UserDto>.Failure(
+                UserResponse.ResultOneofCase.Error => ServiceResult<UserMutationResultDto>.Failure(
                     MapToErrorInfo(response.Error)
                 ),
-                _ => ServiceResult<UserDto>.Failure(
+                _ => ServiceResult<UserMutationResultDto>.Failure(
                     new ErrorInfo { Code = "EMPTY_RESPONSE", Message = "Empty response from gRPC" }
                 ),
             };
@@ -116,7 +117,7 @@ public class UserServiceGrpcClient : IUserServiceClient
         catch (RpcException ex)
         {
             _logger.LogError(ex, "gRPC CreateUser failed");
-            return ServiceResult<UserDto>.Failure(
+            return ServiceResult<UserMutationResultDto>.Failure(
                 new ErrorInfo { Code = "GRPC_ERROR", Message = ex.Status.Detail }
             );
         }
@@ -159,7 +160,7 @@ public class UserServiceGrpcClient : IUserServiceClient
         }
     }
 
-    public async Task<ServiceResult<UserDto>> UpdateUser(string id, UpdateUserRequestDto dto)
+    public async Task<ServiceResult<UserMutationResultDto>> UpdateUser(string id, UpdateUserRequestDto dto)
     {
         try
         {
@@ -176,13 +177,13 @@ public class UserServiceGrpcClient : IUserServiceClient
 
             return response.ResultCase switch
             {
-                UserResponse.ResultOneofCase.Data => ServiceResult<UserDto>.Success(
-                    MapToDto(response.Data)
+                UserResponse.ResultOneofCase.Data => ServiceResult<UserMutationResultDto>.Success(
+                    new UserMutationResultDto(response.Data.UserId)
                 ),
-                UserResponse.ResultOneofCase.Error => ServiceResult<UserDto>.Failure(
+                UserResponse.ResultOneofCase.Error => ServiceResult<UserMutationResultDto>.Failure(
                     MapToErrorInfo(response.Error)
                 ),
-                _ => ServiceResult<UserDto>.Failure(
+                _ => ServiceResult<UserMutationResultDto>.Failure(
                     new ErrorInfo { Code = "EMPTY_RESPONSE", Message = "Empty response from gRPC" }
                 ),
             };
@@ -190,13 +191,13 @@ public class UserServiceGrpcClient : IUserServiceClient
         catch (RpcException ex)
         {
             _logger.LogError(ex, "gRPC UpdateUser failed");
-            return ServiceResult<UserDto>.Failure(
+            return ServiceResult<UserMutationResultDto>.Failure(
                 new ErrorInfo { Code = "GRPC_ERROR", Message = ex.Status.Detail }
             );
         }
     }
 
-    public async Task<ServiceResult<DeleteUserResultDto>> DeleteUser(string userId)
+    public async Task<ServiceResult<UserMutationResultDto>> DeleteUser(string userId)
     {
         try
         {
@@ -206,16 +207,12 @@ public class UserServiceGrpcClient : IUserServiceClient
             return response.ResultCase switch
             {
                 DeleteUserResponse.ResultOneofCase.Data =>
-                    ServiceResult<DeleteUserResultDto>.Success(
-                        new DeleteUserResultDto
-                        {
-                            Success = response.Data.Success,
-                            UserId = response.Data.UserId,
-                        }
+                    ServiceResult<UserMutationResultDto>.Success(
+                        new UserMutationResultDto(response.Data.UserId)
                     ),
                 DeleteUserResponse.ResultOneofCase.Error =>
-                    ServiceResult<DeleteUserResultDto>.Failure(MapToErrorInfo(response.Error)),
-                _ => ServiceResult<DeleteUserResultDto>.Failure(
+                    ServiceResult<UserMutationResultDto>.Failure(MapToErrorInfo(response.Error)),
+                _ => ServiceResult<UserMutationResultDto>.Failure(
                     new ErrorInfo { Code = "EMPTY_RESPONSE", Message = "Empty response from gRPC" }
                 ),
             };
@@ -223,7 +220,7 @@ public class UserServiceGrpcClient : IUserServiceClient
         catch (RpcException ex)
         {
             _logger.LogError(ex, "gRPC DeleteUser failed");
-            return ServiceResult<DeleteUserResultDto>.Failure(
+            return ServiceResult<UserMutationResultDto>.Failure(
                 new ErrorInfo { Code = "GRPC_ERROR", Message = ex.Status.Detail }
             );
         }

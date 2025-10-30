@@ -3,6 +3,7 @@ using ApiGateway.Core.Address;
 using Grpc.Core;
 using Microsoft.Extensions.Logging;
 using Address.Protos;
+using ApiGateway.Core.Address.Dto;
 
 namespace ApiGateway.infrastructure.GrcpClient.Address;
 

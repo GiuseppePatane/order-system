@@ -1,16 +1,17 @@
 using ApiGateway.Core.Common;
+using ApiGateway.Core.User.Dto;
 
 namespace ApiGateway.Core.User;
 
 public interface IUserServiceClient
 {
     Task<ServiceResult<UserDto>> GetUserById(string userId);
-
-    Task<ServiceResult<UserDto>> CreateUser(CreateUserRequestDto request);
-
+    
     Task<ServiceResult<PagedUsersDto>> GetUsers(GetUsersRequestDto request);
 
-    Task<ServiceResult<UserDto>> UpdateUser(string id, UpdateUserRequestDto request);
+    Task<ServiceResult<UserMutationResultDto>> CreateUser(CreateUserRequestDto request);
+    
+    Task<ServiceResult<UserMutationResultDto>> UpdateUser(string id, UpdateUserRequestDto request);
 
-    Task<ServiceResult<DeleteUserResultDto>> DeleteUser(string userId);
+    Task<ServiceResult<UserMutationResultDto>> DeleteUser(string userId);
 }

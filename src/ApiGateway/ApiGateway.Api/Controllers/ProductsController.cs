@@ -1,12 +1,11 @@
+using ApiGateway.Api.Filters;
 using ApiGateway.Core.Common;
 using ApiGateway.Core.Product;
+using ApiGateway.Core.Product.Dto;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ApiGateway.Api.Controllers;
 
-/// <summary>
-/// Manages product operations through the Product gRPC service
-/// </summary>
 [ApiController]
 [Route("api/products")]
 [Produces("application/json")]
@@ -17,7 +16,8 @@ public class ProductsController : ControllerBase
 
     public ProductsController(
         IProductServiceClient productServiceClient,
-        ILogger<ProductsController> logger)
+        ILogger<ProductsController> logger
+    )
     {
         _productServiceClient = productServiceClient;
         _logger = logger;
@@ -45,10 +45,8 @@ public class ProductsController : ControllerBase
             return Ok(result.Data);
         }
 
-        // Converti gli errori del gRPC service in Problem Details
         return MapErrorToProblemDetails(result.Error!);
     }
-
 
     /// <summary>
     /// Creates a new product
@@ -58,20 +56,24 @@ public class ProductsController : ControllerBase
     /// <response code="201">Product created successfully</response>
     /// <response code="400">Invalid product data</response>
     [HttpPost]
-    [ProducesResponseType(typeof(ProductDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ProductMutationResultDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    [ValidationFilter]
     public async Task<IActionResult> CreateProduct([FromBody] CreateProductRequestDto request)
     {
         var result = await _productServiceClient.CreateProduct(request);
         if (result.IsSuccess && result.Data != null)
         {
-            return CreatedAtAction(nameof(GetProduct), new { id = result.Data.ProductId }, result.Data);
+            return CreatedAtAction(
+                nameof(GetProduct),
+                new { id = result.Data.ProductId },
+                result.Data
+            );
         }
 
         return MapErrorToProblemDetails(result.Error!);
     }
-
 
     /// <summary>
     /// Retrieves a paginated list of products
@@ -86,7 +88,13 @@ public class ProductsController : ControllerBase
     [HttpGet("{pageNumber}/{pageSize}")]
     [ProducesResponseType(typeof(PagedProductsDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetProducts([FromRoute] int pageNumber = 1, [FromRoute] int pageSize = 10, [FromQuery] string? categoryId = null, [FromQuery] string? searchTerm = null, [FromQuery] bool? isActive = null)
+    public async Task<IActionResult> GetProducts(
+        [FromRoute] int pageNumber = 1,
+        [FromRoute] int pageSize = 10,
+        [FromQuery] string? categoryId = null,
+        [FromQuery] string? searchTerm = null,
+        [FromQuery] bool? isActive = null
+    )
     {
         var request = new GetProductsRequestDto
         {
@@ -94,7 +102,7 @@ public class ProductsController : ControllerBase
             PageSize = pageSize,
             CategoryId = categoryId,
             IsActive = isActive,
-            SearchTerm = searchTerm
+            SearchTerm = searchTerm,
         };
 
         var result = await _productServiceClient.GetProducts(request);
@@ -103,7 +111,6 @@ public class ProductsController : ControllerBase
 
         return MapErrorToProblemDetails(result.Error!);
     }
-
 
     /// <summary>
     /// Updates an existing product
@@ -115,14 +122,16 @@ public class ProductsController : ControllerBase
     /// <response code="404">Product not found</response>
     /// <response code="400">Invalid product data</response>
     [HttpPut("{id}")]
-    [ProducesResponseType(typeof(ProductDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProductMutationResultDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> UpdateProduct(string id, [FromBody] UpdateProductRequestDto request)
+    public async Task<IActionResult> UpdateProduct(
+        [FromRoute] string id,
+        [FromBody] UpdateProductRequestDto request
+    )
     {
-        request = request with { ProductId = id };
-        var result = await _productServiceClient.UpdateProduct(request);
+        var result = await _productServiceClient.UpdateProduct(id, request);
         if (result.IsSuccess && result.Data != null)
             return Ok(result.Data);
 
@@ -143,10 +152,7 @@ public class ProductsController : ControllerBase
     public async Task<IActionResult> DeleteProduct(string id)
     {
         var result = await _productServiceClient.DeleteProduct(id);
-        if (result.IsSuccess && result.Data != null && result.Data.Success)
-            return NoContent();
-
-        return MapErrorToProblemDetails(result.Error!);
+        return result.IsSuccess ? NoContent() : MapErrorToProblemDetails(result.Error!);
     }
 
     /// <summary>
@@ -160,13 +166,17 @@ public class ProductsController : ControllerBase
     [HttpGet("categories/{pageNumber}/{pageSize}")]
     [ProducesResponseType(typeof(PagedCategoriesDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetCategories([FromRoute] int pageNumber = 1, [FromRoute] int pageSize = 10, [FromQuery] bool? isActive = null)
+    public async Task<IActionResult> GetCategories(
+        [FromRoute] int pageNumber = 1,
+        [FromRoute] int pageSize = 10,
+        [FromQuery] bool? isActive = null
+    )
     {
         var request = new GetCategoriesRequestDto
         {
             PageNumber = pageNumber,
             PageSize = pageSize,
-            IsActive = isActive
+            IsActive = isActive,
         };
 
         var result = await _productServiceClient.GetCategories(request);
@@ -176,13 +186,14 @@ public class ProductsController : ControllerBase
         return MapErrorToProblemDetails(result.Error!);
     }
 
+    //todo: move to a shared
     private IActionResult MapErrorToProblemDetails(ErrorInfo error)
     {
         var problemDetails = new ProblemDetails
         {
             Title = error.Code,
             Detail = error.Message,
-            Extensions = { ["errorCode"] = error.Code }
+            Extensions = { ["errorCode"] = error.Code },
         };
 
         if (error.Details != null && error.Details.Count > 0)
@@ -192,18 +203,40 @@ public class ProductsController : ControllerBase
 
         var (statusCode, type) = error.Code switch
         {
-            "PRODUCT_NOT_FOUND" => (StatusCodes.Status404NotFound, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.4"),
-            "INVALID_PRODUCT_ID" => (StatusCodes.Status400BadRequest, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.1"),
-            "GRPC_ERROR" => (StatusCodes.Status503ServiceUnavailable, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.6.4"),
-            "INVALID_ARGUMENT" => (StatusCodes.Status400BadRequest, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.1"),
-            "EMPTY_RESPONSE" => (StatusCodes.Status502BadGateway, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.6.3"),
-            _ => (StatusCodes.Status500InternalServerError, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.6.1")
+            "PRODUCT_NOT_FOUND" => (
+                StatusCodes.Status404NotFound,
+                "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.4"
+            ),
+            "INVALID_PRODUCT_ID" => (
+                StatusCodes.Status400BadRequest,
+                "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.1"
+            ),
+            "GRPC_ERROR" => (
+                StatusCodes.Status503ServiceUnavailable,
+                "https://datatracker.ietf.org/doc/html/rfc7231#section-6.6.4"
+            ),
+            "INVALID_ARGUMENT" => (
+                StatusCodes.Status400BadRequest,
+                "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.1"
+            ),
+            "EMPTY_RESPONSE" => (
+                StatusCodes.Status502BadGateway,
+                "https://datatracker.ietf.org/doc/html/rfc7231#section-6.6.3"
+            ),
+            _ => (
+                StatusCodes.Status500InternalServerError,
+                "https://datatracker.ietf.org/doc/html/rfc7231#section-6.6.1"
+            ),
         };
 
         problemDetails.Status = statusCode;
         problemDetails.Type = type;
 
-        _logger.LogWarning("Returning error response: {Code} with HTTP status {StatusCode}", error.Code, statusCode);
+        _logger.LogWarning(
+            "Returning error response: {Code} with HTTP status {StatusCode}",
+            error.Code,
+            statusCode
+        );
 
         return StatusCode(statusCode, problemDetails);
     }

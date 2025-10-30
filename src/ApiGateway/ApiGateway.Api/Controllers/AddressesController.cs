@@ -1,5 +1,6 @@
 using ApiGateway.Core.Common;
 using ApiGateway.Core.Address;
+using ApiGateway.Core.Address.Dto;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ApiGateway.Api.Controllers;
@@ -14,7 +15,6 @@ public class AddressesController : ControllerBase
 {
     private readonly IAddressServiceClient _addressServiceClient;
     private readonly ILogger<AddressesController> _logger;
-
     public AddressesController(
         IAddressServiceClient addressServiceClient,
         ILogger<AddressesController> logger)
