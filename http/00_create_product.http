@@ -1,16 +1,39 @@
 @baseUrl = http://localhost:5046
 
-### 1️⃣ Create Product
+### Get Active Categories Only
+GET {{baseUrl}}/api/products/categories/1/10?isActive=true
+Accept: application/json
+
+> {%
+    let data = {};
+    try {
+        data = typeof response.body === 'string' ? JSON.parse(response.body) : response.body;
+    }
+    catch(e) {
+        console.error("JSON parse failed", e);
+    }
+
+    const items = data.items;
+    if (items && items.length > 0) {
+        client.global.set("categoryId", items[2].categoryId);
+        console.log("Saved categoryId =", items[2].categoryId);
+    } else {
+        console.warn("Strano sulla mia macchina funzionava cit.");
+    }
+%}
+
+@categoryId = {{categoryId}}
+###  Create Product
 POST {{baseUrl}}/api/products
 Content-Type: application/json
 
 {
   "name": "Iphone 19",
   "description": "The best iphone ever made.",
-  "categoryId": "Electronics",
+  "categoryId": "{{categoryId}}",
   "price": 79.90,
   "stock": 100,
-  "sku": "IPHONE-{{ $randomInt 1000 9999 }}"
+  "sku": "g.lavespa+{{$timestamp}}@example.com"
 }
 
 > {% client.global.set("productId", response.body.productId); %}
@@ -38,13 +61,13 @@ Content-Type: application/json
   "stock": 150
 }
 
-### 5️⃣ Delete Product
+### Delete Product
 DELETE {{baseUrl}}/api/products/{{productId}}
 
-### 6️⃣ Get Categories (Paginated)
+### Get Categories (Paginated)
 GET {{baseUrl}}/api/products/categories/1/10
 Accept: application/json
 
-### 6️⃣.1 Get Active Categories Only
+### Get Active Categories Only
 GET {{baseUrl}}/api/products/categories/1/10?isActive=true
 Accept: application/json

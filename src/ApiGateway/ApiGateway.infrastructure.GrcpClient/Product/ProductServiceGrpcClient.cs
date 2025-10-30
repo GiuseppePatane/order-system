@@ -251,7 +251,9 @@ public class ProductServiceGrpcClient : IProductServiceClient
                     new StockUpdateDto
                     {
                         ProductId = response.Data.ProductId,
-                        UpdatedStock = response.Data.UpdatedStock
+                        UpdatedStock = response.Data.UpdatedStock,
+                        LockedPrice = (decimal) response.Data.LockedPrice,
+                        LockedQuantity = quantity
                     }),
                 UpdateStockResponse.ResultOneofCase.Error => ServiceResult<StockUpdateDto>.Failure(
                     MapToErrorInfo(response.Error)),

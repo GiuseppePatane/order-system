@@ -41,7 +41,7 @@ public class ReleaseProductStockHandler
         var product = productResult.Value;
 
         // Release stock (increase available quantity)
-        var updateStockResult = product.UpdateStock(product.Stock + command.Quantity);
+        var updateStockResult = product.AddStock(command.Quantity);
         if (updateStockResult.IsFailure)
         {
             return Result<ReleaseProductStockResult>.Failure(updateStockResult.Error);

@@ -13,11 +13,7 @@ public class ProductConfiguration : IEntityTypeConfiguration<Core.Domain.Product
         builder.Property(p => p.Price).IsRequired().HasPrecision(10,2);
         builder.Property(p => p.CreatedAt).IsRequired();
 
-        // Optimistic concurrency control
-        builder.Property(p => p.RowVersion)
-            .IsRowVersion()
-            .IsConcurrencyToken();
-
+        
         builder.HasOne(p => p.Category)
             .WithMany(c => c.Products)
             .HasForeignKey(p => p.CategoryId);

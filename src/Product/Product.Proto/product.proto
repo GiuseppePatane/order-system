@@ -144,6 +144,7 @@ message UpdateStockResponse {
 message StockUpdateData {
   string product_id = 1;
   int32 updated_stock = 2;
+  double locked_price = 3;
 }
 
 // ========== Product Data Model ==========

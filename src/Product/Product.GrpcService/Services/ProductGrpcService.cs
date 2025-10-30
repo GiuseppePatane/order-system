@@ -364,7 +364,8 @@ public class ProductGrpcService : ProductService.ProductServiceBase
                 Data = new StockUpdateData
                 {
                     ProductId = result.Value.ProductId.ToString(),
-                    UpdatedStock = result.Value.UpdatedStock
+                    UpdatedStock = result.Value.UpdatedStock,
+                    LockedPrice = (double) result.Value.LockedPrice, 
                 }
             };
         }
@@ -410,7 +411,8 @@ public class ProductGrpcService : ProductService.ProductServiceBase
                 Data = new StockUpdateData
                 {
                     ProductId = result.Value.ProductId.ToString(),
-                    UpdatedStock = result.Value.UpdatedStock
+                    UpdatedStock = result.Value.UpdatedStock,
+                    LockedPrice = 0.0
                 }
             };
         }

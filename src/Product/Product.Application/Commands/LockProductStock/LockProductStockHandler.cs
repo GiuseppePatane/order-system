@@ -59,7 +59,7 @@ public class LockProductStockHandler
                 }
 
                 // Lock stock (reduce available quantity)
-                var updateStockResult = product.UpdateStock(product.Stock - command.Quantity);
+                var updateStockResult = product.ReduceStock(command.Quantity);
                 if (updateStockResult.IsFailure)
                 {
                     return Result<LockProductStockResult>.Failure(updateStockResult.Error);
@@ -80,9 +80,11 @@ public class LockProductStockHandler
 
                 return Result<LockProductStockResult>.Success(
                     new LockProductStockResult(
-                        product.Id,
-                        product.Stock,
-                        command.Quantity));
+                        ProductId:  product.Id,
+                        UpdatedStock:  product.Stock,
+                        LockedQuantity: command.Quantity,
+                        LockedPrice: product.Price
+                        ));
             
          
         }

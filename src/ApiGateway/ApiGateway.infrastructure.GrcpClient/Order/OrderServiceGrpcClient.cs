@@ -36,7 +36,7 @@ public class OrderServiceGrpcClient : IOrderServiceClient
                 {
                     ProductId = item.ProductId.ToString(),
                     Quantity = item.Quantity,
-                    UnitPrice = (double)item.UnitPrice // Price from ProductService
+                    UnitPrice = (double)item.LockedPrice // Price from ProductService
                 });
             }
 

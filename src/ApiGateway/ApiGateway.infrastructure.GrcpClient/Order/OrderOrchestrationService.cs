@@ -41,7 +41,7 @@ public class OrderOrchestrationService : IOrderOrchestrationService
         _logger.LogInformation("Creating order for user {UserId} with {ItemCount} items", 
             request.UserId, request.Items.Count);
 
-       
+        // Step 1: Validate user exists
         var userResult = await _userClient.GetUserById(request.UserId.ToString());
         if (!userResult.IsSuccess || userResult.Data == null)
         {
@@ -57,15 +57,7 @@ public class OrderOrchestrationService : IOrderOrchestrationService
 
         foreach (var item in request.Items)
         {
-            // Get product details to retrieve the current price
-            var productResult = await _productClient.GetProductById(item.ProductId.ToString());
-            if (!productResult.IsSuccess || productResult.Data == null)
-            {
-                _logger.LogWarning("Product {ProductId} not found", item.ProductId);
-                return ServiceResult<OrderDto>.Failure(
-                    productResult.Error ?? new ErrorInfo { Code = "PRODUCT_NOT_FOUND", Message = $"Product with ID {item.ProductId} does not exist" });
-            }
-
+       
             // Lock the stock
             var lockResult = await _productClient.LockProductStock(item.ProductId.ToString(), item.Quantity);
             if (!lockResult.IsSuccess)
@@ -79,8 +71,8 @@ public class OrderOrchestrationService : IOrderOrchestrationService
             orderItemsWithPrices.Add(new OrderItemWithPriceDto
             {
                 ProductId = item.ProductId,
-                Quantity = item.Quantity,
-                UnitPrice = (decimal)productResult.Data.Price
+                Quantity = lockResult.Data!.LockedQuantity,
+                LockedPrice = lockResult.Data!.LockedPrice
             });
         }
 
@@ -100,6 +92,10 @@ public class OrderOrchestrationService : IOrderOrchestrationService
         if (!orderResult.IsSuccess || orderResult.Data == null)
         {
             _logger.LogError("Failed to create order: {Error}", orderResult.Error?.Message);
+            var releaseTasks = request.Items.Select(item =>
+                _productClient.ReleaseProductStock(item.ProductId.ToString(), item.Quantity));
+            await Task.WhenAll(releaseTasks);
+            _logger.LogInformation("Released locked stock for all products due to order creation failure");
             return ServiceResult<OrderDto>.Failure(
                 orderResult.Error ?? new ErrorInfo { Code = "ORDER_CREATION_FAILED", Message = "Failed to create order" });
         }
@@ -160,6 +156,8 @@ public class OrderOrchestrationService : IOrderOrchestrationService
         _logger.LogInformation("Cancelling order {OrderId} with reason: {Reason}", orderId, reason ?? "No reason provided");
 
         var cancelResult = await _orderClient.CancelOrder(orderId, reason);
+        
+        //todo: release stock for cancelled order items
 
         if (!cancelResult.IsSuccess || cancelResult.Data == null)
         {
