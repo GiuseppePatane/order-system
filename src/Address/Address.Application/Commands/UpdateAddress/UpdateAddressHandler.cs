@@ -19,14 +19,14 @@ public class UpdateAddressHandler
 
     public async Task<Result<UpdateAddressResult>> Handle(UpdateAddressCommand request, CancellationToken cancellationToken)
     {
-        // Get the existing address
+       
         var address = await _readRepository.GetByIdAsync(request.AddressId, cancellationToken);
         if (address == null)
         {
             return Result<UpdateAddressResult>.Failure(new NotFoundError("Address", request.AddressId.ToString()));
         }
         
-        // Update the address
+  
         var updateResult = address.Update(
             request.Street,
             request.Street2,
@@ -42,7 +42,7 @@ public class UpdateAddressHandler
             return Result<UpdateAddressResult>.Failure(updateResult.Error!);
         }
 
-        // Save changes
+      
         var updatedAddressResults = await _writeRepository.UpdateAsync(address, cancellationToken);
         if (!updatedAddressResults.IsSuccess)
         {

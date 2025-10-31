@@ -8,11 +8,11 @@ using Product.Infrastructure.EF;
 
 var builder = Host.CreateApplicationBuilder(args);
 
-// Add configuration
+
 builder.Configuration
     .AddEnvironmentVariables();
 
-// Add DbContext
+
 builder.Services.AddDbContext<ProductDbContext>(options =>
 {
     options.UseNpgsql(
@@ -28,7 +28,7 @@ builder.Services.AddDbContext<ProductDbContext>(options =>
 
 var app = builder.Build();
 
-// Run migrations and seed data
+
 using var scope = app.Services.CreateScope();
 var services = scope.ServiceProvider;
 var logger = services.GetRequiredService<ILogger<Program>>();

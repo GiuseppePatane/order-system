@@ -23,10 +23,11 @@ public class AddressConfiguration : IEntityTypeConfiguration<AddressEntity>
         builder.Property(a => a.CreatedAt).IsRequired();
         builder.Property(a => a.UpdatedAt);
 
-        // Index on UserId for faster lookups
+        
         builder.HasIndex(a => a.UserId);
 
-        // Index on UserId and IsDefault for faster default address lookups
+        // sicuramente ci saranno tante query con  questa combinazione 
+        // per sicurezza  meglio mettere un indce 
         builder.HasIndex(a => new { a.UserId, a.IsDefault });
     }
 }

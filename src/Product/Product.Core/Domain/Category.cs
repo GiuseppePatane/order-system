@@ -48,11 +48,7 @@ public class Category
         return Result<Category>.Success(category);
     }
 
-    /// <summary>
-    ///  Update the category name
-    /// </summary>
-    /// <param name="newName"></param>
-    /// <returns></returns>
+
     public Result UpdateName(string newName)
     {
         if (string.IsNullOrWhiteSpace(newName))
@@ -62,28 +58,19 @@ public class Category
         UpdatedAt = DateTime.UtcNow;
         return Result.Ok();
     }
-
-    /// <summary>
-    /// Update the category description
-    /// </summary>
+    
     public void UpdateDescription(string newDescription)
     {
         Description = newDescription;
         UpdatedAt = DateTime.UtcNow;
     }
-
-    /// <summary>
-    /// Disable the category
-    /// </summary>
+    
     public void Deactivate()
     {
         IsActive = false;
         UpdatedAt = DateTime.UtcNow;
     }
-
-    /// <summary>
-    /// Enable the category
-    /// </summary>
+    
     public void Activate()
     {
         IsActive = true;

@@ -31,7 +31,6 @@ public static class DbInitializer
                 logger.LogInformation("Database is up to date. No pending migrations.");
             }
 
-            // Seed data
             await SeedDataAsync(context, logger);
         }
         catch (Exception ex)
@@ -43,7 +42,7 @@ public static class DbInitializer
 
     private static async Task SeedDataAsync(ProductDbContext context, ILogger logger)
     {
-        // Check if data already exists
+    
         if (await context.Categories.AnyAsync())
         {
             logger.LogInformation("Database already contains data. Skipping seed.");
@@ -51,15 +50,13 @@ public static class DbInitializer
         }
 
         logger.LogInformation("Seeding database with initial data...");
-
-        // Create categories
+        
         var categories = CreateCategories();
         await context.Categories.AddRangeAsync(categories);
         await context.SaveChangesAsync();
 
         logger.LogInformation("Created {Count} categories", categories.Count);
-
-        // Create products for each category
+        
         var products = CreateProducts(categories);
         await context.Products.AddRangeAsync(products);
         await context.SaveChangesAsync();

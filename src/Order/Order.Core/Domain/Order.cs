@@ -31,7 +31,7 @@ public class Order
     public Guid ShippingAddressId { get; private set; }
 
     /// <summary>
-    /// Optional billing address ID (if different from shipping)
+    /// Optional billing address ID 
     /// </summary>
     public Guid? BillingAddressId { get; private set; }
 
@@ -153,7 +153,7 @@ public class Order
     }
 
     /// <summary>
-    /// Adds an item to the order (only if pending)
+    /// Adds an item to the order. If the order is in the pending status.
     /// </summary>
     public Result<bool> AddItem(OrderItem item)
     {
@@ -177,7 +177,7 @@ public class Order
                 nameof(Status),
                 "Can only remove items from pending orders"));
 
-        if (_items.Count == 1)  // an order without items is not valid, should be cancelled instead?
+        if (_items.Count == 1)  //todo: validazione paranoica, forse conviene cancellare l'ordine direttamente.
             return Result<bool>.Failure(new ValidationError(
                 nameof(_items),
                 "Order must have at least one item"));

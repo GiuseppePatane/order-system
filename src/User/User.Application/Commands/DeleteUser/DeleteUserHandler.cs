@@ -18,14 +18,14 @@ public class DeleteUserHandler
 
     public async Task<Result<DeleteUserResult>> Handle(DeleteUserCommand command, CancellationToken cancellationToken = default)
     {
-        // Fetch user
+   
         var userResult = await _readRepository.GetByIdAsync(command.UserId, cancellationToken);
         if (userResult.IsFailure)
             return Result<DeleteUserResult>.Failure(userResult.Error);
 
         var user = userResult.Value;
 
-        // Remove
+  
         var removeResult = _writeRepository.Remove(user);
         if (removeResult.IsFailure)
             return Result<DeleteUserResult>.Failure(removeResult.Error);

@@ -1,296 +1,256 @@
 # Order System - Microservices Architecture
 
 ![.NET](https://img.shields.io/badge/.NET-9.0-512BD4?logo=dotnet)
-![gRPC](https://img.shields.io/badge/gRPC-1.66-00ADD8?logo=grpc)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?logo=postgresql)
+![gRPC](https://img.shields.io/badge/gRPC-00ADD8?logo=grpc)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-336791?logo=postgresql)
 ![.NET Aspire](https://img.shields.io/badge/.NET%20Aspire-9.5-512BD4)
 
-Sistema distribuito di gestione ordini basato su architettura a microservizi, sviluppato con .NET 9 e .NET Aspire per la gestione della Service Discovery, resilienza e telemetria.
+Sistema di gestione ordini basato su microservizi con **Clean Architecture**, **gRPC**, **API Gateway** e **.NET Aspire**.
 
-## 📋 Indice
+---
 
-- [Overview](#overview)
-- [Architettura](#architettura)
-- [Tecnologie](#tecnologie)
-- [Struttura del Progetto](#struttura-del-progetto)
-- [Prerequisiti](#prerequisiti)
-- [Quick Start](#quick-start)
-- [Testing](#testing)
-- [API Documentation](#api-documentation)
-- [Funzionalità Principali](#funzionalità-principali)
+## Quick Start
 
-## 🎯 Overview
+### Prerequisiti
+- **.NET 9 SDK** → [Download](https://dotnet.microsoft.com/download/dotnet/9.0)
+- **Docker Desktop** → [Download](https://www.docker.com/products/docker-desktop)
 
-Questo progetto è un sistema di gestione ordini progettato secondo i principi dei microservizi, dove ogni servizio ha la propria responsabilità e database. Il sistema implementa:
-
-- ✅ **Clean Architecture** con separazione tra Domain, Application e Infrastructure
-- ✅ **CQRS Pattern** con repository separati per lettura e scrittura
-- ✅ **gRPC** per comunicazione inter-service performante e type-safe
-- ✅ **API Gateway** come punto di accesso unificato
-- ✅ **Service Discovery** automatica tramite .NET Aspire
-- ✅ **Resilience Patterns** (retry, circuit breaker, timeout)
-- ✅ **OpenTelemetry** per observability completa
-- ✅ **Database per Microservizio** (PostgreSQL)
-- ✅ **Integration Testing** con Testcontainers
-
-## 🏗️ Architettura
-
-### Diagramma ad Alto Livello
-
-```
-┌─────────────────┐
-│   HTTP Client   │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────────────────┐
-│      API Gateway            │
-│   (REST Endpoints)          │
-│   - Swagger UI              │
-│   - Validation              │
-│   - Orchestration           │
-└──┬────┬────┬────┬───────────┘
-   │    │    │    │
-   │ gRPC    │    │
-   │    │    │    │
-   ▼    ▼    ▼    ▼
-┌──────┐ ┌──────┐ ┌────────┐ ┌───────┐
-│Product│ │ User │ │Address │ │ Order │
-│Service│ │Service│ │Service│ │Service│
-└───┬──┘ └──┬───┘ └───┬────┘ └───┬───┘
-    │       │         │           │
-    ▼       ▼         ▼           ▼
-  ┌────┐ ┌────┐   ┌────┐      ┌────┐
-  │ DB │ │ DB │   │ DB │      │ DB │
-  └────┘ └────┘   └────┘      └────┘
-```
-
-### Microservizi
-
-#### 1. **Product Service**
-- Gestione del catalogo prodotti e categorie
-- Gestione stock con operazioni atomiche (lock/release)
-- Supporto per ricerche e paginazione
-- Validazione SKU unici
-
-#### 2. **User Service**
-- Gestione anagrafica utenti
-- CRUD completo
-- Ricerca e paginazione
-
-#### 3. **Address Service**
-- Gestione indirizzi utente (spedizione e fatturazione)
-- Supporto per indirizzo predefinito
-- Validazione per paese e formato
-
-#### 4. **Order Service**
-- Gestione ciclo di vita ordini
-- Stati ordine (Pending, Confirmed, Shipped, Delivered, Cancelled)
-- Gestione item dell'ordine
-- Calcolo totali automatico
-
-#### 5. **API Gateway**
-- Espone API REST unificate
-- Orchestrazione di operazioni complesse multi-service
-- Validation con FluentValidation
-- Swagger UI per documentazione
-
-## 🛠️ Tecnologie
-
-### Backend
-- **.NET 9.0** - Framework principale
-- **ASP.NET Core** - Web API & gRPC hosting
-- **gRPC** - Comunicazione inter-service
-- **Entity Framework Core 9** - ORM
-- **PostgreSQL** - Database relazionale
-- **.NET Aspire** - Orchestrazione e Service Discovery
-
-### Patterns & Libraries
-- **Clean Architecture** - Separazione delle responsabilità
-- **CQRS** - Command Query Responsibility Segregation
-- **FluentValidation** - Validazione DTO
-- **Mapster** - Object mapping
-- **Polly** (via Aspire) - Resilience patterns
-
-### Observability
-- **OpenTelemetry** - Distributed tracing
-- **Prometheus** (metrics)
-- **Health Checks** - Endpoint di health per ogni servizio
-
-### Testing
-- **xUnit** - Framework di testing
-- **Testcontainers** - Integration testing con database reali
-- **FluentAssertions** - Assertion library
-
-## 📁 Struttura del Progetto
-
-```
-ProductionSystem/
-├── OrderSystem.AppHost/              # .NET Aspire Orchestrator
-├── OrderSystem.ServiceDefaults/      # Configurazione condivisa
-├── src/
-│   ├── ApiGateway/
-│   │   ├── ApiGateway.Api/          # REST Controllers
-│   │   ├── ApiGateway.Core/          # DTOs e Interfaces
-│   │   └── ApiGateway.infrastructure.GrcpClient/  # gRPC Clients
-│   ├── Product/
-│   │   ├── Product.Core/             # Domain entities
-│   │   ├── Product.Application/      # Business logic
-│   │   ├── Product.Infrastructure/   # EF Core, Repositories
-│   │   ├── Product.GrpcService/      # gRPC Service
-│   │   ├── Product.Proto/            # Protobuf definitions
-│   │   └── Product.DataMigrator/     # DB Migrations & Seeding
-│   ├── User/                         # Stessa struttura
-│   ├── Address/                      # Stessa struttura
-│   ├── Order/                        # Stessa struttura
-│   └── Shared/
-│       └── Shared.Proto/             # Proto comuni (es. common.proto)
-├── test/
-│   ├── Product/
-│   │   ├── Product.UnitTest/
-│   │   └── Product.IntegrationTest/
-│   ├── User/
-│   ├── Address/
-│   ├── Order/
-│   └── Test.Shared/                  # Utilities comuni
-└── http/                             # HTTP Request files
-    ├── 00_create_product.http
-    ├── 01_create_user.http
-    ├── 02_create_address.http
-    └── 03_order_lifecycle.http
-```
-
-### Architettura per Microservizio
-
-Ogni microservizio segue Clean Architecture:
-
-```
-Service/
-├── Service.Core/              # Domain Layer
-│   ├── Entities/             # Domain entities
-│   └── Enums/                # Enumerations
-├── Service.Application/       # Application Layer
-│   ├── Dto/                  # Data Transfer Objects
-│   ├── Interfaces/           # Repository & Service interfaces
-│   ├── Mappers/              # Mapster mappers
-│   └── Services/             # Business logic
-├── Service.Infrastructure/    # Infrastructure Layer
-│   ├── EF/                   # DbContext, Configurations
-│   ├── Repositories/         # Repository implementations
-│   └── Migrations/           # EF Migrations
-├── Service.GrpcService/       # Presentation Layer
-│   └── Services/             # gRPC service implementations
-├── Service.Proto/             # Contract Layer
-│   └── service.proto         # Protobuf definitions
-└── Service.DataMigrator/      # Data seeding
-```
-
-## 📦 Prerequisiti
-
-- **.NET 9 SDK** ([Download](https://dotnet.microsoft.com/download/dotnet/9.0))
-- **Docker Desktop** ([Download](https://www.docker.com/products/docker-desktop))
-- **JetBrains Rider** / **Visual Studio 2022** (opzionale ma consigliato)
-
-## 🚀 Quick Start
-
-### 1. Clone del Repository
+### Avvio del Sistema
 
 ```bash
+# Clone del repository
 git clone <repository-url>
 cd ProductionSystem
-```
 
-### 2. Avvio con .NET Aspire
-
-Il modo più semplice per avviare l'intero sistema è utilizzare .NET Aspire:
-
-```bash
+# Avvio con .NET Aspire (avvia tutto automaticamente)
 cd OrderSystem.AppHost
 dotnet run
 ```
 
-Questo comando:
-- 🐘 Avvia i container PostgreSQL per ogni servizio
-- 🚀 Avvia tutti i microservizi (Product, User, Address, Order)
-- 🌐 Avvia l'API Gateway
-- 📊 Configura Service Discovery e Telemetry
-- 🔍 Apre la dashboard Aspire su `http://localhost:15066`
+**Fatto!** Il sistema avvierà:
+- 4 database PostgreSQL (uno per microservizio)
+- 4 microservizi gRPC: Product, User, Address, Order
+- API Gateway REST con Swagger
+- Dashboard Aspire per observability
 
-### 3. Accesso ai Servizi
+### Accesso Rapido
 
-- **API Gateway (Swagger)**: http://localhost:5046/swagger
-- **Aspire Dashboard**: http://localhost:15066
+| Servizio | URL |
+|----------|-----|
+| **API Gateway (Swagger)** | http://localhost:5046/swagger |
+| **Aspire Dashboard** | http://localhost:15066 |
 
-### 4. Test del Sistema
+### Test del Sistema
 
-Utilizza i file `.http` nella cartella `http/` per testare il sistema in sequenza:
+Usa i file `.http` nella cartella `http/` in questo ordine:
 
-1. `00_create_product.http` - Crea prodotti e categorie
-2. `01_create_user.http` - Crea utenti
-3. `02_create_address.http` - Crea indirizzi
-4. `03_order_lifecycle.http` - Gestione completa ordine
+1. **00_create_product.http** - Crea categorie e prodotti
+2. **01_create_user.http** - Crea utenti
+3. **02_create_address.http** - Crea indirizzi
+4. **03_order_lifecycle.http** - Gestione completa di un ordine
+5. **04_delete_user.http** - Cleanup
 
-Oppure usa Swagger UI per esplorare e testare le API interattivamente.
+Oppure usa **Swagger UI** per esplorare le API interattivamente.
 
-## 🧪 Testing
+---
 
-### Unit Test
+## Struttura del Progetto
 
-```bash
-dotnet test --filter Category=Unit
+```
+ProductionSystem/
+│
+├── OrderSystem.AppHost/              # .NET Aspire - Orchestrator
+│   └── Program.cs                    # Configurazione Service Discovery
+│
+├── OrderSystem.ServiceDefaults/      # Configurazione condivisa
+│   └── Extensions.cs                 # OpenTelemetry, Health Checks, Resilience
+│
+├── src/
+│   │
+│   ├── ApiGateway/                   # API Gateway (REST)
+│   │   ├── ApiGateway.Api/          # Controllers REST
+│   │   ├── ApiGateway.Core/          # DTOs e Interfaces
+│   │   └── ApiGateway.infrastructure.GrcpClient/  # gRPC Clients
+│   │
+│   ├── Product/                      # Product Microservice
+│   │   ├── Product.Core/            # ┐
+│   │   ├── Product.Application/     # │ Clean Architecture
+│   │   ├── Product.Infrastructure/  # │ (Domain, App, Infra)
+│   │   ├── Product.GrpcService/     # ┘
+│   │   ├── Product.Proto/           # Protobuf definitions
+│   │   └── Product.DataMigrator/    # DB Migrations & Seeding
+│   │
+│   ├── User/                         # User Microservice
+│   │   └── [stessa struttura]
+│   │
+│   ├── Address/                      # Address Microservice
+│   │   └── [stessa struttura]
+│   │
+│   ├── Order/                        # Order Microservice
+│   │   └── [stessa struttura]
+│   │
+│   └── Shared/
+│       └── Shared.Proto/            # Proto condivisi (common.proto)
+│
+├── test/                            # Testing
+│   ├── Product/
+│   │   ├── Product.UnitTest/
+│   │   └── Product.IntegrationTest/
+│   ├── User/, Address/, Order/
+│   └── Test.Shared/                 # Utilities comuni (Testcontainers)
+│
+└── http/                            # HTTP Request files
+    ├── 00_create_product.http
+    ├── 01_create_user.http
+    ├── 02_create_address.http
+    ├── 03_order_lifecycle.http
+    └── 04_delete_user.http
 ```
 
-### Integration Test
+### Architettura per Microservizio (Clean Architecture)
 
-I test di integrazione utilizzano Testcontainers per creare database PostgreSQL reali:
+Ogni microservizio segue questa struttura:
 
-```bash
-dotnet test --filter Category=Integration
+```
+Service/
+│
+├── Service.Core/              # DOMAIN LAYER
+│   ├── Entities/             # Domain entities (Product, User, etc.)
+│   └── Enums/                # Enumerations (OrderStatus, etc.)
+│
+├── Service.Application/       # APPLICATION LAYER
+│   ├── Dto/                  # Data Transfer Objects
+│   ├── Interfaces/           # Repository & Service interfaces
+│   ├── Mappers/              # Mapster mappers
+│   └── Services/             # Business logic
+│
+├── Service.Infrastructure/    # INFRASTRUCTURE LAYER
+│   ├── EF/                   # DbContext, Configurations
+│   ├── Repositories/         # Repository implementations (CQRS)
+│   └── Migrations/           # EF Core Migrations
+│
+├── Service.GrpcService/       # PRESENTATION LAYER
+│   ├── Services/             # gRPC service implementations
+│   └── Program.cs            # Startup & DI
+│
+└── Service.Proto/             # CONTRACT LAYER
+    └── service.proto         # Protobuf definitions (API contract)
 ```
 
-### Test di uno Specifico Servizio
+---
 
-```bash
-cd test/Product/Product.IntegrationTest
-dotnet test
+## Architettura del Sistema
+
+### Diagramma High-Level
+
+```
+┌─────────────┐
+│ HTTP Client │
+└──────┬──────┘
+       │
+       ▼
+┌──────────────────┐
+│   API Gateway    │  ← REST endpoints, Swagger, Validation
+│   (Port 5046)    │  ← Orchestrazione multi-service
+└─┬───┬───┬───┬───┘
+  │   │   │   │
+  │ gRPC (HTTP/2)
+  │   │   │   │
+  ▼   ▼   ▼   ▼
+┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐
+│ Product │ │  User   │ │ Address │ │  Order  │
+│ Service │ │ Service │ │ Service │ │ Service │
+└────┬────┘ └────┬────┘ └────┬────┘ └────┬────┘
+     │           │           │           │
+     ▼           ▼           ▼           ▼
+   ┌──┐        ┌──┐        ┌──┐        ┌──┐
+   │DB│        │DB│        │DB│        │DB│  ← PostgreSQL
+   └──┘        └──┘        └──┘        └──┘
 ```
 
-## 📖 API Documentation
+### Responsabilità dei Microservizi
 
-### Swagger UI
+| Servizio | Responsabilità | Funzionalità Chiave |
+|----------|----------------|---------------------|
+| **Product Service** | Catalogo prodotti | Categorie, Stock Management (lock/release), SKU unici |
+| **User Service** | Anagrafica utenti | CRUD completo, ricerca, paginazione |
+| **Address Service** | Indirizzi | Indirizzi spedizione/fatturazione, default address |
+| **Order Service** | Gestione ordini | Stati ordine, items, calcolo totali |
+| **API Gateway** | Punto d'accesso unificato | REST API, orchestrazione, validation |
 
-Una volta avviato il sistema, accedi a Swagger UI:
+---
 
-**http://localhost:5046/swagger**
+## Stack Tecnologico
 
-### Workflow Completo di un Ordine
+### Core
+- **.NET 9.0** - Framework
+- **ASP.NET Core** - Web & gRPC hosting
+- **gRPC** - Comunicazione inter-service (HTTP/2, type-safe)
+- **Entity Framework Core 9** - ORM
+- **PostgreSQL** - Database (uno per servizio)
+- **.NET Aspire** - Orchestrazione, Service Discovery, Resilience
 
-#### 1. Creazione Prodotto
+### Patterns
+- **Clean Architecture** - Separazione Domain/Application/Infrastructure
+- **CQRS** - Repository separati per Read/Write
+- **API Gateway Pattern** - Punto d'accesso unificato
+- **Database per Microservizio** - Isolamento dei dati
+
+### Libraries
+- **FluentValidation** - Validazione DTO
+- **Mapster** - Object mapping
+- **Polly** (via Aspire) - Retry, Circuit Breaker, Timeout
+- **OpenTelemetry** - Distributed tracing & metrics
+
+### Testing
+- **xUnit** - Testing framework
+- **Testcontainers** - Integration test con DB reali
+- **FluentAssertions** - Assertion library
+
+---
+
+## Come Usare il Sistema
+
+### 1. Workflow Completo - Creazione Ordine
+
+Seguire i file `.http` in sequenza o usare Swagger:
+
+#### Step 1: Crea un Prodotto
 ```http
-POST /api/products
+POST http://localhost:5046/api/products
+Content-Type: application/json
+
 {
   "name": "iPhone 15",
   "description": "Latest iPhone",
-  "categoryId": "<category-id>",
+  "categoryId": "<category-id>",  # vedi 00_create_product.http
   "price": 999.99,
   "stock": 100,
   "sku": "IPH15-001"
 }
+
+# Risposta: { "productId": "..." }
 ```
 
-#### 2. Creazione Utente
+#### Step 2: Crea un Utente
 ```http
-POST /api/users
+POST http://localhost:5046/api/users
+Content-Type: application/json
+
 {
   "firstName": "Mario",
   "lastName": "Rossi",
   "email": "mario.rossi@example.com"
 }
+
+# Risposta: { "userId": "..." }
 ```
 
-#### 3. Creazione Indirizzo
+#### Step 3: Crea un Indirizzo
 ```http
-POST /api/addresses
+POST http://localhost:5046/api/addresses
+Content-Type: application/json
+
 {
   "userId": "<user-id>",
   "street": "Via Roma 123",
@@ -301,11 +261,15 @@ POST /api/addresses
   "label": "Casa",
   "isDefault": true
 }
+
+# Risposta: { "addressId": "..." }
 ```
 
-#### 4. Creazione Ordine
+#### Step 4: Crea un Ordine
 ```http
-POST /api/orders
+POST http://localhost:5046/api/orders
+Content-Type: application/json
+
 {
   "userId": "<user-id>",
   "shippingAddressId": "<address-id>",
@@ -315,186 +279,220 @@ POST /api/orders
     "quantity": 2
   }
 }
+
+# Risposta: { "orderId": "...", "total": 1999.98, ... }
 ```
 
-#### 5. Gestione Ordine
+#### Step 5: Gestisci l'Ordine
+
 ```http
-# Aggiungere item
-POST /api/orders/{orderId}/items
+# Aggiungi item
+POST http://localhost:5046/api/orders/{orderId}/items
 
-# Modificare quantità
-PATCH /api/orders/{orderId}/items/{itemId}/quantity
+# Modifica quantità
+PATCH http://localhost:5046/api/orders/{orderId}/items/{itemId}/quantity
 
-# Rimuovere item
-DELETE /api/orders/{orderId}/items/{itemId}
+# Cambia stato
+PATCH http://localhost:5046/api/orders/{orderId}/status
+{ "newStatus": "Confirmed" }
 
-# Cambiare stato
-PATCH /api/orders/{orderId}/status
-
-# Cancellare ordine
-DELETE /api/orders/{orderId}/cancel
+# Cancella ordine
+DELETE http://localhost:5046/api/orders/{orderId}/cancel
 ```
 
-## ✨ Funzionalità Principali
+### 2. Esplorare la Dashboard Aspire
 
-### 1. Service Discovery
-Tutti i servizi sono registrati automaticamente e si scoprono a vicenda tramite .NET Aspire. Non ci sono IP hardcoded.
+Visita http://localhost:15066 per:
+- **Traces**: Visualizza richieste distribuite tra servizi
+- **Metrics**: Performance e latenze
+- **Logs**: Log strutturati con correlazione
+- **Health**: Stato di salute di ogni servizio
+- **Resources**: Database, container Docker attivi
 
-### 2. Resilience Patterns
-- **Retry automatico** per chiamate gRPC fallite
-- **Circuit breaker** per prevenire cascading failures
-- **Timeout** configurabili per ogni chiamata
+---
 
-### 3. Gestione Stock Transazionale
-Il Product Service implementa operazioni di lock/release dello stock atomiche per garantire consistenza durante la creazione ordini.
+## Testing
 
+### Unit Test
+```bash
+# Tutti i unit test
+dotnet test --filter Category=Unit
+
+# Test di un servizio specifico
+cd test/Product/Product.UnitTest
+dotnet test
+```
+
+### Integration Test
+
+I test di integrazione usano **Testcontainers** per creare database PostgreSQL reali:
+
+```bash
+# Tutti gli integration test
+dotnet test --filter Category=Integration
+
+# Test di un servizio specifico
+cd test/Product/Product.IntegrationTest
+dotnet test
+```
+
+### Coverage Report
+```bash
+dotnet test --collect:"XPlat Code Coverage"
+```
+
+---
+
+## Funzionalità Chiave
+
+### Service Discovery Automatico
+I servizi si scoprono automaticamente tramite .NET Aspire. Nessun IP hardcoded.
+
+### Resilience Patterns
+- **Retry automatico** per chiamate fallite
+- **Circuit breaker** per prevenire cascading failures  
+- **Timeout** configurabili
+
+### Gestione Stock Transazionale
 ```csharp
 // Lock stock durante creazione ordine
 await productClient.LockProductStock(productId, quantity);
 
-// Release stock in caso di rollback
+// Release in caso di rollback
 await productClient.ReleaseProductStock(productId, quantity);
 ```
 
-### 4. Orchestrazione Complessa
-L'API Gateway orchestra operazioni multi-service, ad esempio la creazione di un ordine richiede:
-- Validazione utente (User Service)
-- Validazione indirizzi (Address Service)
-- Lock stock (Product Service)
-- Recupero prezzi (Product Service)
-- Creazione ordine (Order Service)
+### Orchestrazione Multi-Service
+L'API Gateway orchestra operazioni complesse:
+1. Valida utente (User Service)
+2. Valida indirizzi (Address Service)
+3. Lock stock + prezzi (Product Service)
+4. Crea ordine (Order Service)
+5. Rollback automatico in caso di errore
 
-Con gestione automatica di rollback in caso di errore.
+### Observability Completa
+- **Distributed Tracing**: Traccia richieste tra servizi
+- **Metrics**: Performance di ogni endpoint
+- **Structured Logging**: Log correlati per request
+- **Health Checks**: `/health` su ogni servizio
 
-### 5. Observability
-- **Distributed Tracing**: Traccia le richieste attraverso tutti i microservizi
-- **Metrics**: Metriche di performance per ogni endpoint
-- **Logs**: Logging strutturato con correlazione automatica
-- **Health Checks**: Endpoint `/health` su ogni servizio
-
-### 6. Database per Microservizio
-Ogni servizio ha il proprio database PostgreSQL, garantendo:
+### Database Isolation
+Ogni servizio ha il proprio PostgreSQL:
 - Isolamento dei dati
 - Scalabilità indipendente
-- Libertà tecnologica (schema diverso per ogni servizio)
+- Schema diversificato
 
-### 7. Validazione Completa
-- Validazione dei DTO con FluentValidation
-- Validazione business logic a livello di Application
-- Response standardizzate con ServiceResult<T>
+---
 
-### 8. Integration Testing
-Test di integrazione completi con:
-- Database PostgreSQL reale (Testcontainers)
-- Test del ciclo di vita completo
-- Setup e teardown automatici
+## Concetti Implementati
 
-## 🎓 Concetti Dimostrati
-
-Questo progetto dimostra competenze in:
+Questo progetto dimostra:
 
 ### Architettura
-- ✅ Microservices Architecture
-- ✅ Clean Architecture
-- ✅ CQRS Pattern
-- ✅ API Gateway Pattern
-- ✅ Service Discovery
-- ✅ Database per Microservizio
+- Microservices Architecture  
+- Clean Architecture (Domain, Application, Infrastructure)  
+- CQRS Pattern  
+- API Gateway Pattern  
+- Service Discovery  
+- Database per Microservizio  
 
 ### Best Practices
-- ✅ Separation of Concerns
-- ✅ Dependency Injection
-- ✅ Repository Pattern
-- ✅ DTO Pattern
-- ✅ Validation Layer
-- ✅ Error Handling standardizzato
+- Dependency Injection  
+- Repository Pattern  
+- DTO Pattern  
+- Validation Layer (FluentValidation)  
+- Error Handling standardizzato (ServiceResult<T>)  
+- Separation of Concerns  
 
 ### DevOps & Observability
-- ✅ Containerization (Docker)
-- ✅ Orchestration (.NET Aspire)
-- ✅ Distributed Tracing
-- ✅ Health Checks
-- ✅ Structured Logging
-
-### Testing
-- ✅ Unit Testing
-- ✅ Integration Testing con Testcontainers
-- ✅ Test Isolation
-- ✅ Arrange-Act-Assert Pattern
+- Containerization (Docker)  
+- Orchestration (.NET Aspire)  
+- Distributed Tracing  
+- Health Checks  
+- Structured Logging  
 
 ### Performance & Resilience
-- ✅ gRPC per comunicazione performante
-- ✅ Connection pooling
-- ✅ Retry policies
-- ✅ Circuit breaker
-- ✅ Timeout handling
+- gRPC per comunicazione performante (HTTP/2, Protobuf)  
+- Connection pooling  
+- Retry policies  
+- Circuit breaker  
+- Timeout handling  
 
-## 🔧 Configurazione
+### Testing
+- Unit Testing  
+- Integration Testing con Testcontainers  
+- Test Isolation  
+- Arrange-Act-Assert Pattern  
+
+---
+
+## Configurazione Avanzata
 
 ### Variabili d'Ambiente
 
-Ogni servizio supporta le seguenti variabili:
+Ogni servizio supporta:
 
 ```bash
 # Database
-ConnectionStrings__DefaultConnection=Host=localhost;Database=productdb;Username=postgres;Password=postgres
+ConnectionStrings__DefaultConnection=Host=localhost;Database=db;Username=postgres;Password=postgres
 
 # Logging
 Logging__LogLevel__Default=Information
 
 # Kestrel
-ASPNETCORE_URLS=http://+:5000;https://+:5001
+ASPNETCORE_URLS=http://+:5000
 ```
 
 ### Porte di Default
 
-| Servizio | HTTP | HTTPS | gRPC |
-|----------|------|-------|------|
-| API Gateway | 5046 | 7046 | - |
-| Product Service | 5001 | 7001 | 5001 |
-| User Service | 5002 | 7002 | 5002 |
-| Address Service | 5003 | 7003 | 5003 |
-| Order Service | 5004 | 7004 | 5004 |
-
-## 📝 Note di Sviluppo
-
-### Aggiunta di un Nuovo Microservizio
-
-1. Creare la struttura Clean Architecture
-2. Definire i contract gRPC in `.proto`
-3. Implementare le entities e repository
-4. Implementare il servizio gRPC
-5. Aggiungere il client nell'API Gateway
-6. Registrare in `OrderSystem.AppHost`
-7. Aggiungere i test
-
-### Migrazione Database
-
-```bash
-cd src/<Service>/<Service>.Infrastructure
-dotnet ef migrations add <MigrationName>
-dotnet ef database update
-```
-
-### Troubleshooting
-
-**Problema: I servizi non si trovano**
-- Verifica che .NET Aspire sia in esecuzione
-- Controlla i log nella Aspire Dashboard
-
-**Problema: Database connection error**
-- Assicurati che Docker sia in esecuzione
-- Verifica che i container PostgreSQL siano avviati
-
-**Problema: Porta già in uso**
-- Modifica le porte in `launchSettings.json`
-- Oppure termina il processo che usa la porta
-
-## 📄 Licenza
-
-Questo progetto è sviluppato a scopo didattico per colloqui tecnici.
+| Servizio | HTTP | Descrizione |
+|----------|------|-------------|
+| API Gateway | 5046 | REST API + Swagger |
+| Product Service | 5001 | gRPC (HTTP/2) |
+| User Service | 5002 | gRPC (HTTP/2) |
+| Address Service | 5003 | gRPC (HTTP/2) |
+| Order Service | 5004 | gRPC (HTTP/2) |
+| Aspire Dashboard | 15066 | Observability |
 
 ---
 
-**Sviluppato con** ❤️ **usando .NET 9 e .NET Aspire**
+## Troubleshooting
+
+### Problema: Servizi non si trovano
+**Soluzione**: Verifica che .NET Aspire sia in esecuzione e controlla i log nella Dashboard.
+
+### Problema: Database connection error
+**Soluzione**: 
+- Assicurati che Docker sia in esecuzione
+- Verifica che i container PostgreSQL siano avviati (`docker ps`)
+
+### Problema: Porta già in uso
+**Soluzione**: 
+- Modifica le porte in `launchSettings.json`
+- Oppure: `lsof -ti:5046 | xargs kill` (macOS/Linux)
+
+### Problema: Build errors
+**Soluzione**: 
+```bash
+dotnet restore
+dotnet build
+```
+
+---
+
+## Note per Colloquio
+
+Questo progetto dimostra competenze avanzate in:
+
+- **Architetture distribuite**: Microservices con isolamento completo
+- **Modern .NET**: .NET 9, gRPC, Aspire, EF Core 9
+- **Design Patterns**: Clean Architecture, CQRS, Repository, Gateway
+- **Resilience**: Retry, Circuit Breaker, Timeout policies
+- **Observability**: OpenTelemetry, distributed tracing, metrics
+- **Testing**: Unit + Integration con database reali (Testcontainers)
+- **DevOps ready**: Docker, orchestrazione, health checks
+
+---
+
+**Sviluppato con .NET 9 e .NET Aspire**
 

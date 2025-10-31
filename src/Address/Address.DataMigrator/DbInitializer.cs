@@ -14,7 +14,7 @@ public static class DbInitializer
     {
         try
         {
-            // Apply migrations
+    
             logger.LogInformation("Checking for pending migrations...");
             var pendingMigrations = await context.Database.GetPendingMigrationsAsync();
 

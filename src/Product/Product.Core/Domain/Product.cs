@@ -73,9 +73,7 @@ public class Product
         return Result<Product>.Success(product);
     }
 
-    /// <summary>
-    /// Aggiorna lo stock del prodotto
-    /// </summary>
+
     public Result UpdateStock(int quantity)
     {
         if (Stock + quantity < 0)
@@ -86,9 +84,7 @@ public class Product
         return Result.Ok();
     }
 
-    /// <summary>
-    /// Riduce lo stock del prodotto (per ordini)
-    /// </summary>
+
     public Result ReduceStock(int quantity)
     {
         if (!IsActive)
@@ -102,9 +98,7 @@ public class Product
         return Result.Ok();
     }
 
-    /// <summary>
-    /// Incrementa lo stock del prodotto (per restituzioni o rifornimenti)
-    /// </summary>
+
     public Result AddStock(int quantity)
     {
         if (quantity <= 0)
@@ -115,9 +109,7 @@ public class Product
         return Result.Ok();
     }
 
-    /// <summary>
-    /// Verifica se il prodotto è disponibile in quantità sufficiente
-    /// </summary>
+
     public Result<bool> CheckAvailability(int quantity)
     {
         if (!IsActive)
@@ -127,9 +119,7 @@ public class Product
         return Result<bool>.Success(isAvailable);
     }
 
-    /// <summary>
-    /// Aggiorna il prezzo del prodotto
-    /// </summary>
+
     public Result UpdatePrice(decimal newPrice)
     {
         if (newPrice <= 0)
@@ -140,9 +130,7 @@ public class Product
         return Result.Ok();
     }
 
-    /// <summary>
-    /// Aggiorna il nome del prodotto
-    /// </summary>
+  
     public Result UpdateName(string newName)
     {
         if (string.IsNullOrWhiteSpace(newName))
@@ -153,19 +141,14 @@ public class Product
         return Result.Ok();
     }
 
-    /// <summary>
-    /// Aggiorna la descrizione del prodotto
-    /// </summary>
+
     public Result UpdateDescription(string newDescription)
     {
         Description = newDescription ?? string.Empty;
         UpdatedAt = DateTime.UtcNow;
         return Result.Ok();
     }
-
-    /// <summary>
-    /// Aggiorna lo SKU del prodotto
-    /// </summary>
+    
     public Result UpdateSku(string newSku)
     {
         if (string.IsNullOrWhiteSpace(newSku))
@@ -175,10 +158,7 @@ public class Product
         UpdatedAt = DateTime.UtcNow;
         return Result.Ok();
     }
-
-    /// <summary>
-    /// Cambia la categoria del prodotto
-    /// </summary>
+    
     public Result ChangeCategory(Guid newCategoryId)
     {
         if (newCategoryId == Guid.Empty)
@@ -188,10 +168,7 @@ public class Product
         UpdatedAt = DateTime.UtcNow;
         return Result.Ok();
     }
-
-    /// <summary>
-    /// Imposta lo stock assoluto del prodotto
-    /// </summary>
+    
     public Result SetStock(int newStock)
     {
         if (newStock < 0)
@@ -201,19 +178,13 @@ public class Product
         UpdatedAt = DateTime.UtcNow;
         return Result.Ok();
     }
-
-    /// <summary>
-    /// Disattiva il prodotto
-    /// </summary>
+    
     public void Deactivate()
     {
         IsActive = false;
         UpdatedAt = DateTime.UtcNow;
     }
-
-    /// <summary>
-    /// Attiva il prodotto
-    /// </summary>
+    
     public void Activate()
     {
         IsActive = true;

@@ -1,5 +1,5 @@
-using Shared.Core.Domain.Results;
 using Shared.Core.Domain.Errors;
+using Shared.Core.Domain.Results;
 using User.Core.Repositories;
 
 namespace User.Application.Commands.UpdateUser;
@@ -11,48 +11,52 @@ public class UpdateUserHandler
 
     public UpdateUserHandler(
         IUserReadOnlyRepository readRepository,
-        IUserWriteRepository writeRepository)
+        IUserWriteRepository writeRepository
+    )
     {
         _readRepository = readRepository;
         _writeRepository = writeRepository;
     }
 
-    public async Task<Result<UpdateUserResult>> Handle(UpdateUserCommand command, CancellationToken cancellationToken = default)
+    public async Task<Result<UpdateUserResult>> Handle(
+        UpdateUserCommand command,
+        CancellationToken cancellationToken = default
+    )
     {
-        // Fetch user
         var userResult = await _readRepository.GetByIdAsync(command.UserId, cancellationToken);
         if (userResult.IsFailure)
             return Result<UpdateUserResult>.Failure(userResult.Error);
 
         var user = userResult.Value;
 
-        // Check email uniqueness if email is being changed
         if (!string.IsNullOrWhiteSpace(command.Email) && command.Email != user.Email)
         {
-            var existingUserResult = await _readRepository.GetByEmailAsync(command.Email, cancellationToken);
+            var existingUserResult = await _readRepository.GetByEmailAsync(
+                command.Email,
+                cancellationToken
+            );
             if (existingUserResult.IsSuccess)
-                return Result<UpdateUserResult>.Failure(new DuplicateError("User", "Email", command.Email));
+                return Result<UpdateUserResult>.Failure(
+                    new DuplicateError("User", "Email", command.Email)
+                );
         }
 
-        // Apply updates
         var updateResult = user.Update(
             command.FirstName ?? user.FirstName,
             command.LastName ?? user.LastName,
-            command.Email ?? user.Email);
+            command.Email ?? user.Email
+        );
 
         if (updateResult.IsFailure)
             return Result<UpdateUserResult>.Failure(updateResult.Error);
 
-        // Persist
         var updateRepoResult = _writeRepository.Update(user);
         if (updateRepoResult.IsFailure)
             return Result<UpdateUserResult>.Failure(updateRepoResult.Error);
 
         var saveResult = await _writeRepository.SaveChangesAsync(cancellationToken);
-        if (saveResult.IsFailure)
-            return Result<UpdateUserResult>.Failure(saveResult.Error);
-
-        return Result<UpdateUserResult>.Success(new UpdateUserResult(user.Id));
+        return saveResult.IsFailure
+            ? Result<UpdateUserResult>.Failure(saveResult.Error)
+            : Result<UpdateUserResult>.Success(new UpdateUserResult(user.Id));
     }
 }
-

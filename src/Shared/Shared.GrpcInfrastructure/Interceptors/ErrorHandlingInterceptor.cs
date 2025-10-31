@@ -60,7 +60,7 @@ public class ErrorHandlingInterceptor : Interceptor
         {
             _logger.LogError(ex, "Unhandled exception in gRPC call: {Method}", context.Method);
 
-            // In production, don't expose internal error details
+            //  no exception to the client about internal errors
             var message = "An internal error occurred. Please contact support.";
             throw new RpcException(new Status(StatusCode.Internal, message));
         }

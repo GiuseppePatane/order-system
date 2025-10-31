@@ -26,36 +26,33 @@ public class AddOrderItemHandler
         {
             return Result<AddOrderItemResult>.Failure(new NotFoundError("Order", request.OrderId.ToString()));
         }
-
-        // Validate order is in pending status (only pending orders can be modified)
-        if (order.Status != Core.Domain.OrderStatus.Pending)
+        
+        if (order.Status != OrderStatus.Pending)
         {
             return Result<AddOrderItemResult>.Failure(new ValidationError(
                 nameof(order.Status),
                 "Can only add items to pending orders"));
         }
-
-        // Create the new order item
+        
         var itemResult = OrderItem.Create(request.ProductId, request.Quantity, request.UnitPrice);
         if (!itemResult.IsSuccess)
         {
             return Result<AddOrderItemResult>.Failure(itemResult.Error);
         }
 
-        // Store reference to the newly created item before adding it
-        var newItem = itemResult.Value;
 
-        // Add the item to the order
+        var newItem = itemResult.Value;
+        
         var addResult = order.AddItem(newItem);
         if (!addResult.IsSuccess)
         {
             return Result<AddOrderItemResult>.Failure(addResult.Error);
         }
 
-        // Save changes
+      
         await _writeRepository.UpdateAsync(order, cancellationToken);
 
-        // Return the result with the newly added item's ID
+        
         return Result<AddOrderItemResult>.Success(new AddOrderItemResult(order.Id, newItem.Id));
     }
 }
