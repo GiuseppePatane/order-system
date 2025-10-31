@@ -39,5 +39,11 @@ public interface IOrderOrchestrationService
     /// Adds an item to an existing order with server-validated price
     /// </summary>
     Task<ServiceResult<AddOrderItemResultDto>> AddOrderItemAsync(string orderId, OrderItemDto request, CancellationToken cancellationToken = default);
+
+    Task<ServiceResult<UpdateOrderItemQuantityResultDto>> UpdateOrderItemQuantity(string orderId, string itemId, int requestQuantity, CancellationToken cancellationToken = default);
+
+    Task<ServiceResult<RemoveOrderItemResultDto>> RemoveOrderItem(string orderId, string itemId,
+        CancellationToken cancellationToken = default);
+
 }
 

@@ -33,9 +33,9 @@ public class AddressesController : Base
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetAddress(string id)
+    public async Task<IActionResult> GetAddress(string id,CancellationToken cancellationToken)
     {
-        var result = await _addressServiceClient.GetAddressById(id);
+        var result = await _addressServiceClient.GetAddressById(id,cancellationToken);
 
         if (result.IsSuccess)
         {
@@ -150,9 +150,9 @@ public class AddressesController : Base
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> UpdateAddress(string id, [FromBody] UpdateAddressRequestDto request)
+    public async Task<IActionResult> UpdateAddress(string id, [FromBody] UpdateAddressRequestDto request,CancellationToken cancellationToken)
     {
-        var result = await _addressServiceClient.UpdateAddress(id,request);
+        var result = await _addressServiceClient.UpdateAddress(id,request,cancellationToken);
 
         if (result.IsSuccess && result.Data != null)
             return Ok(result.Data);

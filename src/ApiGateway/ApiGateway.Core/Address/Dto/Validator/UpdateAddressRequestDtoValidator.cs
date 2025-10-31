@@ -6,11 +6,6 @@ public class UpdateAddressRequestDtoValidator : AbstractValidator<UpdateAddressR
 {
     public UpdateAddressRequestDtoValidator()
     {
-        RuleFor(x => x.AddressId)
-            .NotEmpty()
-            .WithMessage("AddressId is required")
-            .Must(BeAValidGuid)
-            .WithMessage("AddressId must be a valid GUID");
 
         RuleFor(x => x.Street)
             .MaximumLength(200)

@@ -203,7 +203,7 @@ public class OrdersController : Base
     {
         _logger.LogInformation("Removing item {ItemId} from order {OrderId}", itemId, orderId);
 
-        var result = await _orderClient.RemoveOrderItem(orderId, itemId);
+        var result = await _orderOrchestration.RemoveOrderItem(orderId, itemId);
 
         if (result.IsSuccess && result.Data != null)
         {
@@ -235,7 +235,7 @@ public class OrdersController : Base
         _logger.LogInformation("Updating item {ItemId} quantity in order {OrderId} to {NewQuantity}",
             itemId, orderId, requestDto.NewQuantity);
 
-        var result = await _orderClient.UpdateOrderItemQuantity(orderId, itemId, requestDto.NewQuantity);
+        var result = await _orderOrchestration.UpdateOrderItemQuantity(orderId, itemId, requestDto.NewQuantity);
 
         if (result.IsSuccess && result.Data != null)
         {

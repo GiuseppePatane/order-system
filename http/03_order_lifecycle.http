@@ -6,7 +6,7 @@
 @addressId = {{addressId}}
 
 ### Get first available product (paged)
-GET {{baseUrl}}/api/products/1/1
+GET {{baseUrl}}/api/products/1/10
 Accept: application/json
 
 > {%
@@ -50,28 +50,37 @@ Content-Type: application/json
 > {% client.global.set("orderId", response.body.orderId); %}
 ### Saved orderId = {{orderId}}
 
-### Add Item to Order
+###  Get Order Details
+GET {{baseUrl}}/api/orders/{{orderId}}
 
+
+
+### Add Item to Order 
+### productid  da prendere manualmente dal get products
 POST {{baseUrl}}/api/orders/{{orderId}}/items
 Content-Type: application/json
 
 {
-  "productId": "{{productId}}",
+  "productId": "c705bf02-913f-43cb-b93e-4d4465adcfc6",
   "quantity": 3
 }
 
 > {% client.global.set("itemId", response.body.itemId); %}
 ### Saved itemId = {{itemId}}
 
-### 3️⃣ Update Item Quantity
+
+### Update Item Quantity
 PATCH {{baseUrl}}/api/orders/{{orderId}}/items/{{itemId}}/quantity
 Content-Type: application/json
 
 {
-  "newQuantity": 3
+  "newQuantity": -10
 }
 
-### 4️⃣ Update Order Status
+###  Remove Item from Order
+DELETE {{baseUrl}}/api/orders/{{orderId}}/items/{{itemId}}
+
+###  Update Order Status
 PATCH {{baseUrl}}/api/orders/{{orderId}}/status
 Content-Type: application/json
 
@@ -79,7 +88,7 @@ Content-Type: application/json
   "status": "Confirmed"
 }
 
-### 5️⃣ Cancel Order
+### Cancel Order
 DELETE {{baseUrl}}/api/orders/{{orderId}}/cancel
 Content-Type: application/json
 
@@ -87,11 +96,10 @@ Content-Type: application/json
   "reason": "Customer request"
 }
 
-### 6️⃣ Get Order Details
+###  Get Order Details
 GET {{baseUrl}}/api/orders/{{orderId}}
 
-### 7️⃣ Get User Orders
+###  Get User Orders
 GET {{baseUrl}}/api/orders/user/{{userId}}
 
-### 8️⃣ Remove Item from Order
-DELETE {{baseUrl}}/api/orders/{{orderId}}/items/{{itemId}}
+

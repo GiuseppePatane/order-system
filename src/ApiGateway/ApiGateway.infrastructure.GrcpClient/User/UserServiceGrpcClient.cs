@@ -21,7 +21,7 @@ public class UserServiceGrpcClient : IUserServiceClient
         _logger = logger;
     }
 
-    public async Task<ServiceResult<UserDto>> GetUserById(string userId)
+    public async Task<ServiceResult<UserDto>> GetUserById(string userId, CancellationToken cancellationToken)
     {
         try
         {
@@ -29,7 +29,7 @@ public class UserServiceGrpcClient : IUserServiceClient
 
             var request = new GetUserRequest { UserId = userId };
 
-            var response = await _grpcClient.GetUserAsync(request);
+            var response = await _grpcClient.GetUserAsync(request, cancellationToken: cancellationToken);
 
             return response.ResultCase switch
             {

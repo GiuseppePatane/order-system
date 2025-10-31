@@ -19,7 +19,7 @@ public class OrderServiceGrpcClient : IOrderServiceClient
         _logger = logger;
     }
 
-    public async Task<ServiceResult<OrderDto>> CreateOrder(CreateOrderRequestWithPricesDto request)
+    public async Task<ServiceResult<OrderDto>> CreateOrder(CreateOrderRequestWithPricesDto request, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -41,7 +41,7 @@ public class OrderServiceGrpcClient : IOrderServiceClient
                 });
             }
 
-            var response = await _grpcClient.CreateOrderAsync(grpcRequest);
+            var response = await _grpcClient.CreateOrderAsync(grpcRequest, cancellationToken: cancellationToken);
 
             if (response.ResultCase == OrderResponse.ResultOneofCase.Data)
             {
@@ -65,12 +65,12 @@ public class OrderServiceGrpcClient : IOrderServiceClient
         }
     }
 
-    public async Task<ServiceResult<OrderDto>> GetOrderById(string orderId)
+    public async Task<ServiceResult<OrderDto>> GetOrderById(string orderId,CancellationToken cancellationToken = default)
     {
         try
         {
             var request = new GetOrderRequest { OrderId = orderId };
-            var response = await _grpcClient.GetOrderAsync(request);
+            var response = await _grpcClient.GetOrderAsync(request, cancellationToken: cancellationToken);
 
             if (response.ResultCase == OrderResponse.ResultOneofCase.Data)
             {
@@ -94,12 +94,12 @@ public class OrderServiceGrpcClient : IOrderServiceClient
         }
     }
 
-    public async Task<ServiceResult<List<OrderDto>>> GetOrdersByUserId(string userId)
+    public async Task<ServiceResult<List<OrderDto>>> GetOrdersByUserId(string userId, CancellationToken cancellationToken = default)
     {
         try
         {
             var request = new GetOrdersByUserRequest { UserId = userId };
-            var response = await _grpcClient.GetOrdersByUserAsync(request);
+            var response = await _grpcClient.GetOrdersByUserAsync(request, cancellationToken: cancellationToken);
 
             if (response.ResultCase == GetOrdersResponse.ResultOneofCase.Data)
             {
@@ -127,7 +127,7 @@ public class OrderServiceGrpcClient : IOrderServiceClient
         }
     }
 
-    public async Task<ServiceResult<OrderDto>> CancelOrder(string orderId, string? reason = null)
+    public async Task<ServiceResult<OrderDto>> CancelOrder(string orderId, string? reason = null, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -137,7 +137,7 @@ public class OrderServiceGrpcClient : IOrderServiceClient
                 Reason = reason
             };
 
-            var response = await _grpcClient.CancelOrderAsync(request);
+            var response = await _grpcClient.CancelOrderAsync(request, cancellationToken: cancellationToken);
 
             if (response.ResultCase == OrderResponse.ResultOneofCase.Data)
             {
@@ -161,7 +161,7 @@ public class OrderServiceGrpcClient : IOrderServiceClient
         }
     }
 
-    public async Task<ServiceResult<OrderDto>> UpdateOrderStatus(string orderId, string newStatus)
+    public async Task<ServiceResult<OrderDto>> UpdateOrderStatus(string orderId, string newStatus, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -180,7 +180,7 @@ public class OrderServiceGrpcClient : IOrderServiceClient
                 Status = statusEnum
             };
 
-            var response = await _grpcClient.UpdateOrderStatusAsync(request);
+            var response = await _grpcClient.UpdateOrderStatusAsync(request, cancellationToken: cancellationToken);
 
             if (response.ResultCase == OrderResponse.ResultOneofCase.Data)
             {
@@ -215,6 +215,7 @@ public class OrderServiceGrpcClient : IOrderServiceClient
             TotalAmount = (decimal)data.TotalAmount,
             Items = data.Items.Select(item => new OrderItemResponseDto
             {
+                OrderItemId = item.OrderItemId,
                 ProductId = item.ProductId,
                 ProductName = string.Empty,  //Product service 
                 Quantity = item.Quantity,
@@ -239,7 +240,7 @@ public class OrderServiceGrpcClient : IOrderServiceClient
         };
     }
 
-    public async Task<ServiceResult<AddOrderItemResultDto>> AddOrderItem(string orderId, OrderItemWithPriceDto request)
+    public async Task<ServiceResult<AddOrderItemResultDto>> AddOrderItem(string orderId, OrderItemWithPriceDto request, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -251,7 +252,7 @@ public class OrderServiceGrpcClient : IOrderServiceClient
                 UnitPrice = (double)request.LockedPrice
             };
 
-            var response = await _grpcClient.AddOrderItemAsync(grpcRequest);
+            var response = await _grpcClient.AddOrderItemAsync(grpcRequest, cancellationToken: cancellationToken);
 
             if (response.ResultCase == AddOrderItemResponse.ResultOneofCase.Data)
             {
@@ -279,7 +280,7 @@ public class OrderServiceGrpcClient : IOrderServiceClient
         }
     }
 
-    public async Task<ServiceResult<RemoveOrderItemResultDto>> RemoveOrderItem(string orderId, string itemId)
+    public async Task<ServiceResult<RemoveOrderItemResultDto>> RemoveOrderItem(string orderId, string itemId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -289,7 +290,7 @@ public class OrderServiceGrpcClient : IOrderServiceClient
                 ItemId = itemId
             };
 
-            var response = await _grpcClient.RemoveOrderItemAsync(grpcRequest);
+            var response = await _grpcClient.RemoveOrderItemAsync(grpcRequest, cancellationToken: cancellationToken);
 
             if (response.ResultCase == RemoveOrderItemResponse.ResultOneofCase.Data)
             {
@@ -317,7 +318,7 @@ public class OrderServiceGrpcClient : IOrderServiceClient
     }
 
     public async Task<ServiceResult<UpdateOrderItemQuantityResultDto>> UpdateOrderItemQuantity(
-        string orderId, string itemId, int newQuantity)
+        string orderId, string itemId, int newQuantity, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -328,7 +329,7 @@ public class OrderServiceGrpcClient : IOrderServiceClient
                 NewQuantity = newQuantity
             };
 
-            var response = await _grpcClient.UpdateOrderItemQuantityAsync(grpcRequest);
+            var response = await _grpcClient.UpdateOrderItemQuantityAsync(grpcRequest, cancellationToken: cancellationToken);
 
             if (response.ResultCase == UpdateOrderItemQuantityResponse.ResultOneofCase.Data)
             {

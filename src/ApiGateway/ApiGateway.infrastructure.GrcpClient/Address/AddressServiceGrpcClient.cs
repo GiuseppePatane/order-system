@@ -20,7 +20,7 @@ public class AddressServiceGrpcClient : IAddressServiceClient
         _logger = logger;
     }
 
-    public async Task<ServiceResult<AddressDto>> GetAddressById(string addressId)
+    public async Task<ServiceResult<AddressDto>> GetAddressById(string addressId, CancellationToken cancellationToken=default)
     {
         try
         {
@@ -31,7 +31,7 @@ public class AddressServiceGrpcClient : IAddressServiceClient
                 AddressId = addressId
             };
 
-            var response = await _grpcClient.GetAddressAsync(request);
+            var response = await _grpcClient.GetAddressAsync(request, cancellationToken: cancellationToken);
 
             return response.ResultCase switch
             {
@@ -76,12 +76,12 @@ public class AddressServiceGrpcClient : IAddressServiceClient
         }
     }
 
-    public async Task<ServiceResult<List<AddressDto>>> GetAddressesByUser(string userId)
+    public async Task<ServiceResult<List<AddressDto>>> GetAddressesByUser(string userId,CancellationToken cancellationToken = default)
     {
         try
         {
             var request = new GetAddressesByUserRequest { UserId = userId };
-            var response = await _grpcClient.GetAddressesByUserAsync(request);
+            var response = await _grpcClient.GetAddressesByUserAsync(request, cancellationToken: cancellationToken);
 
             return response.ResultCase switch
             {
@@ -98,7 +98,7 @@ public class AddressServiceGrpcClient : IAddressServiceClient
         }
     }
 
-    public async Task<ServiceResult<AddressDto>> GetDefaultAddress(string userId)
+    public async Task<ServiceResult<AddressDto>> GetDefaultAddress(string userId, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -119,7 +119,7 @@ public class AddressServiceGrpcClient : IAddressServiceClient
         }
     }
 
-    public async Task<ServiceResult<PagedAddressesDto>> GetPagedAddressesByUser(string userId, int pageNumber, int pageSize)
+    public async Task<ServiceResult<PagedAddressesDto>> GetPagedAddressesByUser(string userId, int pageNumber, int pageSize, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -130,7 +130,7 @@ public class AddressServiceGrpcClient : IAddressServiceClient
                 PageSize = pageSize
             };
 
-            var response = await _grpcClient.GetPagedAddressesByUserAsync(request);
+            var response = await _grpcClient.GetPagedAddressesByUserAsync(request,cancellationToken: cancellationToken);
 
             return response.ResultCase switch
             {
@@ -146,7 +146,7 @@ public class AddressServiceGrpcClient : IAddressServiceClient
         }
     }
 
-    public async Task<ServiceResult<AddressDto>> CreateAddress(CreateAddressRequestDto requestDto)
+    public async Task<ServiceResult<AddressDto>> CreateAddress(CreateAddressRequestDto requestDto, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -163,7 +163,7 @@ public class AddressServiceGrpcClient : IAddressServiceClient
                 IsDefault = requestDto.IsDefault
             };
 
-            var response = await _grpcClient.CreateAddressAsync(request);
+            var response = await _grpcClient.CreateAddressAsync(request, cancellationToken: cancellationToken);
 
             return response.ResultCase switch
             {
@@ -179,7 +179,7 @@ public class AddressServiceGrpcClient : IAddressServiceClient
         }
     }
 
-    public async Task<ServiceResult<AddressDto>> UpdateAddress(string addressId, UpdateAddressRequestDto dto)
+    public async Task<ServiceResult<AddressDto>> UpdateAddress(string addressId, UpdateAddressRequestDto dto, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -196,7 +196,7 @@ public class AddressServiceGrpcClient : IAddressServiceClient
             if (!string.IsNullOrWhiteSpace(dto.Country)) request.Country = dto.Country;
             if (dto.Label != null) request.Label = dto.Label;
 
-            var response = await _grpcClient.UpdateAddressAsync(request);
+            var response = await _grpcClient.UpdateAddressAsync(request, cancellationToken: cancellationToken);
 
             return response.ResultCase switch
             {
@@ -212,12 +212,12 @@ public class AddressServiceGrpcClient : IAddressServiceClient
         }
     }
 
-    public async Task<ServiceResult<DeleteAddressResultDto>> DeleteAddress(string addressId)
+    public async Task<ServiceResult<DeleteAddressResultDto>> DeleteAddress(string addressId, CancellationToken cancellationToken = default)
     {
         try
         {
             var request = new DeleteAddressRequest { AddressId = addressId };
-            var response = await _grpcClient.DeleteAddressAsync(request);
+            var response = await _grpcClient.DeleteAddressAsync(request, cancellationToken: cancellationToken);
 
             return response.ResultCase switch
             {
@@ -234,7 +234,7 @@ public class AddressServiceGrpcClient : IAddressServiceClient
         }
     }
 
-    public async Task<ServiceResult<AddressDto>> SetDefaultAddress(string addressId)
+    public async Task<ServiceResult<AddressDto>> SetDefaultAddress(string addressId, CancellationToken cancellationToken = default)
     {
         try
         {

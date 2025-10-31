@@ -46,9 +46,14 @@ public class Base : ControllerBase
             "PRODUCT_VALIDATION_FAILED"
             or "INVALID_ORDER_DATA"
             or "PRODUCT_ALREADY_IN_ORDER"
+            or "INVALID_QUANTITY"
             or "STOCK_LOCK_FAILED" => (
                 StatusCodes.Status400BadRequest,
                 "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.1"
+            ),
+            "ORDERITEM_NOT_FOUND" => (
+                StatusCodes.Status404NotFound,
+                "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.4"
             ),
             "ORDER_CREATION_FAILED" or "ADD_ITEM_FAILED" => (
                 StatusCodes.Status500InternalServerError,

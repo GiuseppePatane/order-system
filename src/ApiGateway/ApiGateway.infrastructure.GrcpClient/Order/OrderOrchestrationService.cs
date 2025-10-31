@@ -128,6 +128,18 @@ public class OrderOrchestrationService : IOrderOrchestrationService
 
     private ServiceResult<string> ValidateBusinessRules(OrderItemDto item)
     {
+        if (item.Quantity <= 0)
+        {
+            _logger.LogWarning("Order item quantity must be greater than zero");
+            return ServiceResult<string>.Failure(
+                new ErrorInfo
+                {
+                    Code = "INVALID_QUANTITY",
+                    Message = "Item quantity must be greater than zero",
+                }
+            );
+        }
+
         if (item.Quantity > MaxItemsPerOrder)
         {
             _logger.LogWarning("Order exceeds maximum items limit: {Count}", item.Quantity);
@@ -142,7 +154,7 @@ public class OrderOrchestrationService : IOrderOrchestrationService
         return ServiceResult<string>.Success("Business rules validated");
     }
 
-    private async Task ReleaseProductStock(OrderItemDto orderItem)
+    private async Task<ServiceResult<string>> ReleaseProductStock(OrderItemDto orderItem)
     {
         var releaseProductStockResult = await _productClient.ReleaseProductStock(
             orderItem.ProductId.ToString(),
@@ -158,18 +170,27 @@ public class OrderOrchestrationService : IOrderOrchestrationService
             );
             ///  Servirebbero dei meccanismi di compensazione più sofisticati in un sistema reale
             ///  come code di retry, alerting, o persino intervento manuale.
-            ///  Per semplicità,  mi limito a loggare un errore critico.  
+            ///  Per semplicità,  mi limito a loggare un errore critico.
             _logger.LogCritical(
                 "Manual intervention may be required to reconcile stock for product {ProductId}",
                 orderItem.ProductId
             );
-        }
-        else
-        {
-            _logger.LogInformation(
-                "Released locked stock for all products due to order creation failure"
+            return ServiceResult<string>.Failure(
+                releaseProductStockResult.Error
+                    ?? new ErrorInfo
+                    {
+                        Code = "STOCK_RELEASE_FAILED",
+                        Message =
+                            $"Failed to release locked stock for product {orderItem.ProductId}",
+                    }
             );
         }
+
+        _logger.LogInformation(
+            "Released locked stock for all products due to order creation failure"
+        );
+
+        return ServiceResult<string>.Success("Stock released successfully");
     }
 
     private async Task<ServiceResult<OrderItemWithPriceDto>> LockStockAndGetPrice(
@@ -179,7 +200,9 @@ public class OrderOrchestrationService : IOrderOrchestrationService
     {
         var lockResult = await _productClient.LockProductStock(
             item.ProductId.ToString(),
-            item.Quantity, cancellationToken);
+            item.Quantity,
+            cancellationToken
+        );
         if (!lockResult.IsSuccess)
         {
             _logger.LogWarning(
@@ -218,7 +241,8 @@ public class OrderOrchestrationService : IOrderOrchestrationService
     )
     {
         var shippingAddressResult = await _addressServiceClient.GetAddressById(
-            request.ShippingAddressId.ToString()
+            request.ShippingAddressId.ToString(),
+            cancellationToken
         );
         if (!shippingAddressResult.IsSuccess)
         {
@@ -301,7 +325,7 @@ public class OrderOrchestrationService : IOrderOrchestrationService
     )
     {
         _logger.LogDebug("Validating existence of user {UserId}", requestUserId);
-        var userResult = await _userClient.GetUserById(requestUserId.ToString());
+        var userResult = await _userClient.GetUserById(requestUserId.ToString(), cancellationToken);
 
         if (!userResult.IsSuccess || userResult.Data == null)
         {
@@ -326,7 +350,7 @@ public class OrderOrchestrationService : IOrderOrchestrationService
     {
         _logger.LogInformation("Getting order {OrderId}", orderId);
 
-        var orderResult = await _orderClient.GetOrderById(orderId);
+        var orderResult = await _orderClient.GetOrderById(orderId, cancellationToken);
 
         if (!orderResult.IsSuccess || orderResult.Data == null)
         {
@@ -354,7 +378,7 @@ public class OrderOrchestrationService : IOrderOrchestrationService
     {
         _logger.LogInformation("Getting orders for user {UserId}", userId);
 
-        var ordersResult = await _orderClient.GetOrdersByUserId(userId);
+        var ordersResult = await _orderClient.GetOrdersByUserId(userId, cancellationToken);
 
         if (!ordersResult.IsSuccess || ordersResult.Data == null)
         {
@@ -409,9 +433,8 @@ public class OrderOrchestrationService : IOrderOrchestrationService
                     }
             );
         }
-        
+
         var cancelResult = await _orderClient.CancelOrder(orderId, reason);
-        
 
         if (!cancelResult.IsSuccess || cancelResult.Data == null)
         {
@@ -428,14 +451,15 @@ public class OrderOrchestrationService : IOrderOrchestrationService
 
         foreach (var item in order.Data.Items)
         {
-           await  ReleaseProductStock(new OrderItemDto
-            {
-                ProductId = Guid.Parse(item.ProductId),
-                Quantity = item.Quantity
-            });
+            await ReleaseProductStock(
+                new OrderItemDto
+                {
+                    ProductId = Guid.Parse(item.ProductId),
+                    Quantity = item.Quantity,
+                }
+            );
         }
-        
-        
+
         _logger.LogInformation("Order {OrderId} cancelled successfully", orderId);
         return ServiceResult<OrderMutationResponseDto>.Success(
             new OrderMutationResponseDto(cancelResult.Data.OrderId, cancelResult.Data.Status)
@@ -498,7 +522,7 @@ public class OrderOrchestrationService : IOrderOrchestrationService
             request.ProductId,
             request.Quantity
         );
-        
+
         var orderResult = await _orderClient.GetOrderById(orderId);
         if (!orderResult.IsSuccess || orderResult.Data == null)
         {
@@ -514,7 +538,7 @@ public class OrderOrchestrationService : IOrderOrchestrationService
         }
 
         var order = orderResult.Data;
-        
+
         var existingItem = order.Items.FirstOrDefault(item =>
             item.ProductId == request.ProductId.ToString()
         );
@@ -586,6 +610,245 @@ public class OrderOrchestrationService : IOrderOrchestrationService
         );
 
         return ServiceResult<AddOrderItemResultDto>.Success(addResult.Data);
+    }
+   public async Task<ServiceResult<UpdateOrderItemQuantityResultDto>> UpdateOrderItemQuantity(
+        string orderId,
+        string itemId,
+        int requestQuantity,
+        CancellationToken cancellationToken = default
+    )
+    {
+        
+        _logger.LogInformation(
+            "Updating quantity for item {ItemId} in order {OrderId} to {NewQuantity}",
+            itemId,
+            orderId,
+            requestQuantity
+        );
+        var order = await _orderClient.GetOrderById(orderId, cancellationToken);
+        if (!order.IsSuccess || order.Data == null)
+        {
+            _logger.LogWarning("Order {OrderId} not found", orderId);
+            return ServiceResult<UpdateOrderItemQuantityResultDto>.Failure(
+                order.Error
+                    ?? new ErrorInfo
+                    {
+                        Code = "ORDER_NOT_FOUND",
+                        Message = $"Order with ID {orderId} not found",
+                    }
+            );
+        }
+        _logger.LogInformation("Order {OrderId} retrieved successfully", orderId);
+        var orderItem = order.Data.Items.FirstOrDefault(i => i.OrderItemId == itemId);
+        if (orderItem == null)
+        {
+            _logger.LogWarning("Item {ItemId} not found in order {OrderId}", itemId, orderId);
+            return ServiceResult<UpdateOrderItemQuantityResultDto>.Failure(
+                new ErrorInfo
+                {
+                    Code = "ORDER_ITEM_NOT_FOUND",
+                    Message = $"Order item with ID {itemId} not found in order {orderId}",
+                }
+            );
+        }
+        _logger.LogInformation(
+            "Order item {ItemId} retrieved successfully from order {OrderId}",
+            itemId,
+            orderId
+        );;
+        var oldQty = orderItem.Quantity;
+        var diff = requestQuantity - oldQty;
+        _logger.LogInformation(
+            "Calculated quantity difference for item {ItemId} in order {OrderId}: OldQty={OldQty}, NewQty={NewQty}, Diff={Diff}",
+            itemId,
+            orderId,
+            oldQty,
+            requestQuantity,
+            diff
+        );
+        var orderItemDto = new OrderItemDto
+        {
+            ProductId = Guid.Parse(orderItem.ProductId),
+            Quantity = requestQuantity,
+        };
+
+        var businessRulesValidation = ValidateBusinessRules(orderItemDto);
+
+        if (!businessRulesValidation.IsSuccess)
+        {
+            _logger.LogWarning(
+                "Business rules validation failed for item {ItemId} in order {OrderId}: {Error}",
+                itemId,
+                orderId,
+                businessRulesValidation.Error?.Message
+            );
+            return ServiceResult<UpdateOrderItemQuantityResultDto>.Failure(
+                businessRulesValidation.Error!
+            );
+        }
+
+        if (diff > 0)
+        {
+            orderItemDto.Quantity = diff;
+            _logger.LogInformation(
+                "Locking additional {diff} stock for product {ProductId} due to quantity increase from {OldQty} to {NewQty}",
+                diff,
+                orderItemDto.ProductId,
+                oldQty,
+                requestQuantity
+            );
+          
+            var lockQuantityResult = await LockStockAndGetPrice(orderItemDto, cancellationToken);
+            if (!lockQuantityResult.IsSuccess)
+            {
+                return ServiceResult<UpdateOrderItemQuantityResultDto>.Failure(
+                    lockQuantityResult.Error!
+                );
+            }
+            _logger.LogInformation(
+                "Updating order item {ItemId} quantity in order {OrderId} to {NewQuantity}",
+                itemId,
+                orderId,
+                requestQuantity
+            );
+            var updateResult = await _orderClient.UpdateOrderItemQuantity(
+                orderId,
+                itemId,
+                requestQuantity,
+                cancellationToken
+            );
+            if (!updateResult.IsSuccess)
+            {
+                await ReleaseProductStock(orderItemDto);
+                return ServiceResult<UpdateOrderItemQuantityResultDto>.Failure(updateResult.Error!);
+            }
+            
+            _logger.LogInformation(
+                "Order item {ItemId} quantity in order {OrderId} updated successfully to {NewQuantity}",
+                itemId,
+                orderId,
+                requestQuantity
+            );
+            
+            return ServiceResult<UpdateOrderItemQuantityResultDto>.Success(updateResult.Data!);
+        }
+
+        _logger.LogInformation(
+            "Releasing stock for product {ProductId} due to quantity decrease",
+            orderItemDto.ProductId
+        );
+        orderItemDto.Quantity = -diff;
+        
+        _logger.LogInformation(
+            "Releasing {Quantity} stock for product {ProductId} due to quantity decrease from {OldQty} to {NewQty}",
+            orderItemDto.Quantity,
+            orderItemDto.ProductId,
+            oldQty,
+            requestQuantity
+        );;
+
+        var releaseProductResult = await ReleaseProductStock(orderItemDto);
+        if (!releaseProductResult.IsSuccess)
+        {
+            _logger.LogWarning(
+                "Failed to release stock for product {ProductId} when decreasing quantity in order {OrderId}",
+                orderItemDto.ProductId,
+                orderId
+            );
+            return ServiceResult<UpdateOrderItemQuantityResultDto>.Failure(
+                releaseProductResult.Error!
+            );
+        }
+        _logger.LogInformation(
+            "Updating order item {ItemId} quantity in order {OrderId} to {NewQuantity}",
+            itemId,
+            orderId,
+            requestQuantity
+        );
+        var  updateOrderItemQuantityResult = await _orderClient.UpdateOrderItemQuantity(
+            orderId,
+            itemId,
+            requestQuantity,
+            cancellationToken
+        );
+        
+        if (!updateOrderItemQuantityResult.IsSuccess)
+        {
+            _logger.LogWarning(
+                "Failed to update quantity for item {ItemId} in order {OrderId} to {NewQuantity}",
+                itemId,
+                orderId,
+                requestQuantity
+            );
+            return ServiceResult<UpdateOrderItemQuantityResultDto>.Failure(
+                updateOrderItemQuantityResult.Error!
+            );
+        }
+        _logger.LogInformation(
+            "Order item {ItemId} quantity in order {OrderId} updated successfully to {NewQuantity}",
+            itemId,
+            orderId,
+            requestQuantity
+        );;
+        return ServiceResult<UpdateOrderItemQuantityResultDto>.Success(
+            updateOrderItemQuantityResult.Data!
+        );
+    }
+
+ 
+    public async Task<ServiceResult<RemoveOrderItemResultDto>> RemoveOrderItem(string orderId, string itemId,CancellationToken cancellationToken = default)
+    {
+        var order = await _orderClient.GetOrderById(orderId, cancellationToken);
+        if (!order.IsSuccess || order.Data == null)
+        {
+            _logger.LogWarning("Order {OrderId} not found", orderId);
+            return ServiceResult<RemoveOrderItemResultDto>.Failure(
+                order.Error
+                ?? new ErrorInfo
+                {
+                    Code = "ORDER_NOT_FOUND",
+                    Message = $"Order with ID {orderId} not found",
+                }
+            );
+        }
+        var orderItem = order.Data.Items.FirstOrDefault(i => i.OrderItemId == itemId);
+        if (orderItem == null)
+        {
+            _logger.LogWarning("Item {ItemId} not found in order {OrderId}", itemId, orderId);
+            return ServiceResult<RemoveOrderItemResultDto>.Failure(
+                new ErrorInfo
+                {
+                    Code = "ORDER_ITEM_NOT_FOUND",
+                    Message = $"Order item with ID {itemId} not found in order {orderId}",
+                }
+            );
+        }
+    
+        var removeResult = await _orderClient.RemoveOrderItem(orderId, itemId, cancellationToken);
+        if (!removeResult.IsSuccess || removeResult.Data == null)
+        {
+            _logger.LogWarning("Failed to remove item {ItemId} from order {OrderId}", itemId, orderId);
+            return ServiceResult<RemoveOrderItemResultDto>.Failure(
+                removeResult.Error
+                ?? new ErrorInfo
+                {
+                    Code = "REMOVE_ITEM_FAILED",
+                    Message = $"Failed to remove item {itemId} from order {orderId}"
+
+                });
+        }
+
+        var orderItemDto = new OrderItemDto
+        {
+            ProductId = Guid.Parse(orderItem.ProductId),
+            Quantity = orderItem.Quantity,
+        };
+        
+         await ReleaseProductStock(orderItemDto); 
+  
+        _logger.LogInformation("Item {ItemId} removed successfully from order {OrderId}", itemId, orderId);
+        return ServiceResult<RemoveOrderItemResultDto>.Success(removeResult.Data);
+         
     }
 
     private async Task<OrderDto> EnrichOrderWithProductNamesFromIds(OrderDto order)

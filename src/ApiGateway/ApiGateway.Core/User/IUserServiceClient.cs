@@ -5,7 +5,7 @@ namespace ApiGateway.Core.User;
 
 public interface IUserServiceClient
 {
-    Task<ServiceResult<UserDto>> GetUserById(string userId);
+    Task<ServiceResult<UserDto>> GetUserById(string userId, CancellationToken cancellationToken=default);
     
     Task<ServiceResult<PagedUsersDto>> GetUsers(GetUsersRequestDto request);
 
