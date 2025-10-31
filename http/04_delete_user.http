@@ -2,8 +2,6 @@
 @userId = {{userId}}
 @addressId = {{addressId}}
 
-### 1️⃣ Delete Address
-DELETE {{baseUrl}}/api/addresses/{{addressId}}
 
-### 2️⃣ Delete User
+### Delete User
 DELETE {{baseUrl}}/api/users/{{userId}}
