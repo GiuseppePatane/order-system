@@ -240,10 +240,9 @@ Il progetto include sia unit test che integration test.
 i primi servono a testare le classi di dominio,i secondi testano direttamente l'esecuzione del metodo grpc. 
 ### Unit Test
 ```bash
-dotnet test --filter Category=Unit
 
 # Test di un servizio specifico
-cd test/Product/Product.UnitTest
+cd test/{Service}/Product.UnitTest
 dotnet test
 ```
 
@@ -254,18 +253,14 @@ I test di integrazione usano **Testcontainers** per creare database PostgreSQL r
 Assicurarsi che Docker sia in esecuzione prima di eseguire i test.
 
 ```bash
-# Tutti gli integration test
-dotnet test --filter Category=Integration
+
 
 # Test di un servizio specifico
-cd test/Product/Product.IntegrationTest
+cd test/{Service}/Product.IntegrationTest
 dotnet test
 ```
 
-### Coverage Report
-```bash
-dotnet test --collect:"XPlat Code Coverage"
-```
+In alternativa potete eseguire tutti i test utilizzando Rider o Visual Studio.
 
 ---
 
