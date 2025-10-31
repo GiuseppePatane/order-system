@@ -9,14 +9,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddServiceDefaults();
 
 builder.Services.AddValidatorsFromAssemblyContaining<CreateProductRequestDtoValidator>();
-// Add services to the container.
+
 builder.Services.AddControllers();
 
-// Configure Problem Details (RFC 7807)
+
 builder.Services.AddProblemDetails();
 
-
-// Configure Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -26,17 +24,13 @@ builder.Services.AddSwaggerGen(options =>
         Version = "v1",
         Description = "API Gateway for Order System "
     });
-
-    // Enable XML comments
+    
     var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFilename);
     if (File.Exists(xmlPath))
     {
         options.IncludeXmlComments(xmlPath);
     }
-
-    // Add security definition if needed in future
-    // options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme { ... });
 });
 
 // Configure gRPC client with service discovery and resilience

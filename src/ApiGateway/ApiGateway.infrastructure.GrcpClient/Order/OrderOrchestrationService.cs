@@ -48,7 +48,6 @@ public class OrderOrchestrationService : IOrderOrchestrationService
     )
     {
         var correlationId = Guid.NewGuid();
-        // Create a logging scope with correlation ID and user ID for better traceability
         using var scope = _logger.BeginScope(
             new Dictionary<string, object>
             {

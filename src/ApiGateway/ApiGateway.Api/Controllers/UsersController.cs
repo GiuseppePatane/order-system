@@ -10,13 +10,15 @@ namespace ApiGateway.Api.Controllers;
 public class UsersController : Base
 {
     private readonly IUserServiceClient _userServiceClient;
+    private readonly IUserOrchestratorService _userOrchestratorService;
     private readonly ILogger<UsersController> _logger;
 
-    public UsersController(IUserServiceClient userServiceClient, ILogger<UsersController> logger)
+    public UsersController(IUserServiceClient userServiceClient, ILogger<UsersController> logger, IUserOrchestratorService userOrchestratorService)
         : base(logger)
     {
         _userServiceClient = userServiceClient;
         _logger = logger;
+        _userOrchestratorService = userOrchestratorService;
     }
 
     /// <summary>
@@ -139,9 +141,9 @@ public class UsersController : Base
     [ProducesResponseType(typeof(void), StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> DeleteUser(string id)
+    public async Task<IActionResult> DeleteUser(string id,CancellationToken cancellationToken)
     {
-        var result = await _userServiceClient.DeleteUser(id);
+        var result = await _userOrchestratorService.DeleteUser(id, cancellationToken);
         if (result.IsSuccess)
             return NoContent();
 

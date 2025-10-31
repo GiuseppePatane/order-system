@@ -22,4 +22,8 @@
         <ProjectReference Include="..\ApiGateway.Core\ApiGateway.Core.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Shared\" />
+    </ItemGroup>
+
 </Project>
