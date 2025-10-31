@@ -1,5 +1,3 @@
-using Shared.Core.Domain.Results;
-
 namespace Address.Application.Commands.UpdateAddress;
 
 public record UpdateAddressCommand(

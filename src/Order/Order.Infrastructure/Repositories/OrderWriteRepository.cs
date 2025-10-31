@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using Order.Core.Repositories;
 using Order.Infrastructure.EF;
 

@@ -165,7 +165,6 @@ public class OrderServiceGrpcClient : IOrderServiceClient
     {
         try
         {
-            // Parse status string to enum
             if (!Enum.TryParse<OrderStatus>(newStatus, true, out var statusEnum))
             {
                 return ServiceResult<OrderDto>.Failure(new ErrorInfo
@@ -217,7 +216,7 @@ public class OrderServiceGrpcClient : IOrderServiceClient
             Items = data.Items.Select(item => new OrderItemResponseDto
             {
                 ProductId = item.ProductId,
-                ProductName = string.Empty, // Will be enriched by orchestration service
+                ProductName = string.Empty,  //Product service 
                 Quantity = item.Quantity,
                 UnitPrice = (decimal)item.UnitPrice,
                 TotalPrice = (decimal)item.TotalPrice

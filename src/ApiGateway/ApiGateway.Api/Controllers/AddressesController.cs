@@ -1,14 +1,10 @@
-using ApiGateway.Api.Filters;
-using ApiGateway.Core.Common;
 using ApiGateway.Core.Address;
 using ApiGateway.Core.Address.Dto;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ApiGateway.Api.Controllers;
 
-/// <summary>
-/// Manages address operations through the Address gRPC service
-/// </summary>
+
 [ApiController]
 [Route("api/addresses")]
 [Produces("application/json")]
@@ -156,8 +152,7 @@ public class AddressesController : Base
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> UpdateAddress(string id, [FromBody] UpdateAddressRequestDto request)
     {
-        request = request with { AddressId = id };
-        var result = await _addressServiceClient.UpdateAddress(request);
+        var result = await _addressServiceClient.UpdateAddress(id,request);
 
         if (result.IsSuccess && result.Data != null)
             return Ok(result.Data);
@@ -180,7 +175,7 @@ public class AddressesController : Base
     {
         var result = await _addressServiceClient.DeleteAddress(id);
 
-        if (result.IsSuccess && result.Data != null && result.Data.Success)
+        if (result.IsSuccess)
             return NoContent();
 
         return MapErrorToProblemDetails(result.Error!);

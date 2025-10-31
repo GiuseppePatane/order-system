@@ -12,12 +12,11 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddOrderApplication(this IServiceCollection services)
     {
-        // Register handlers
+ 
         services.AddScoped<CreateOrderHandler>();
         services.AddScoped<UpdateOrderStatusHandler>();
         services.AddScoped<CancelOrderHandler>();
-
-        // Register item management handlers
+        
         services.AddScoped<AddOrderItemHandler>();
         services.AddScoped<RemoveOrderItemHandler>();
         services.AddScoped<UpdateOrderItemQuantityHandler>();

@@ -1,5 +1,3 @@
-using Microsoft.Extensions.Configuration;
-using Microsoft.VisualStudio.TestPlatform.TestHost;
 using User.Infrastructure.EF;
 using Test.Shared.Infrastructure;
 using Xunit.Abstractions;

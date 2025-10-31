@@ -1,5 +1,3 @@
-using ApiGateway.Api.Filters;
-using ApiGateway.Core.Common;
 using ApiGateway.Core.Product;
 using ApiGateway.Core.Product.Dto;
 using Microsoft.AspNetCore.Mvc;
@@ -34,6 +32,7 @@ public class ProductsController : Base
     /// <param name="isActive">Optional filter for active products</param>
     /// <returns>A paginated list of products</returns>
     /// <response code="200">Returns the paginated product list</response>
+    /// <response code="500">Internal server error</response>
     [HttpGet("{pageNumber}/{pageSize}")]
     [ProducesResponseType(typeof(PagedProductsDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
@@ -64,11 +63,12 @@ public class ProductsController : Base
     /// <summary>
     /// Retrieves a single product by its ID
     /// </summary>
-    /// <param name="id">The product ID (GUID format)</param>
+    /// <param name="id">The product ID </param>
     /// <returns>The product details</returns>
     /// <response code="200">Returns the product details</response>
     /// <response code="404">Product not found</response>
     /// <response code="400">Invalid product ID format</response>
+    /// <response code="500">Internal server error</response>
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(ProductDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
@@ -93,6 +93,7 @@ public class ProductsController : Base
     /// <returns>The created product</returns>
     /// <response code="201">Product created successfully</response>
     /// <response code="400">Invalid product data</response>
+    /// 
     [HttpPost]
     [ProducesResponseType(typeof(ProductMutationResultDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -121,6 +122,7 @@ public class ProductsController : Base
     /// <response code="200">Product updated successfully</response>
     /// <response code="404">Product not found</response>
     /// <response code="400">Invalid product data</response>
+    /// <response code="500">Internal server error</response>
     [HttpPut("{id}")]
     [ProducesResponseType(typeof(ProductMutationResultDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -145,6 +147,7 @@ public class ProductsController : Base
     /// <returns>No content on success</returns>
     /// <response code="204">Product deleted successfully</response>
     /// <response code="404">Product not found</response>
+    /// <response code="500">Internal server error</response>
     [HttpDelete("{id}")]
     [ProducesResponseType(typeof(void), StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]

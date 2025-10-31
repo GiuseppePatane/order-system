@@ -1,5 +1,4 @@
 using Shared.Core.Domain.Results;
-using Shared.Core.Domain.Errors;
 using Product.Core.Repositories;
 
 namespace Product.Application.Commands.DeleteProduct;

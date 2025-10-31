@@ -1,4 +1,3 @@
-using Product.Core.Domain;
 using Product.Core.Domain.Errors;
 using Shared.Core.Domain.Errors;
 using Shouldly;

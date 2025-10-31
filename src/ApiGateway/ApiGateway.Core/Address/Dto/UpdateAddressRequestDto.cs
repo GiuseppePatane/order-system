@@ -2,7 +2,6 @@ namespace ApiGateway.Core.Address.Dto;
 
 public record UpdateAddressRequestDto
 {
-    public string AddressId { get; init; } = string.Empty;
     public string? Street { get; init; }
     public string? Street2 { get; init; }
     public string? City { get; init; }

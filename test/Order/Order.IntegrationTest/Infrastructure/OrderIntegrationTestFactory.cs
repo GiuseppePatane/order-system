@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Hosting;
 using Order.Infrastructure.EF;
 using Test.Shared.Infrastructure;
 using Xunit.Abstractions;

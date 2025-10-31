@@ -15,7 +15,7 @@ public interface IAddressServiceClient
 
     Task<ServiceResult<AddressDto>> CreateAddress(CreateAddressRequestDto request);
 
-    Task<ServiceResult<AddressDto>> UpdateAddress(UpdateAddressRequestDto request);
+    Task<ServiceResult<AddressDto>> UpdateAddress(string addressId, UpdateAddressRequestDto request);
 
     Task<ServiceResult<DeleteAddressResultDto>> DeleteAddress(string addressId);
 

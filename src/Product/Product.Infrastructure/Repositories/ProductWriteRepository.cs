@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using Product.Core.Repositories;
 using Product.Infrastructure.EF;
 using Shared.Core.Domain.Results;

@@ -1,5 +1,3 @@
-using Shared.Core.Domain.Results;
-
 namespace Address.Application.Commands.CreateAddress;
 
 public record CreateAddressCommand(

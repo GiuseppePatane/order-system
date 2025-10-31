@@ -1,5 +1,4 @@
 using Grpc.Core;
-using Microsoft.Extensions.Logging;
 using Shared.GrpcInfrastructure.Base;
 using User.Application.Commands.CreateUser;
 using User.Application.Commands.UpdateUser;

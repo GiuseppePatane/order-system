@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Configuration;
 using Product.Infrastructure.EF;
 using Test.Shared.Infrastructure;
 using Xunit.Abstractions;

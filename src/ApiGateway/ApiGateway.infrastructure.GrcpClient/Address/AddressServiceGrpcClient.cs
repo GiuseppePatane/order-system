@@ -179,13 +179,13 @@ public class AddressServiceGrpcClient : IAddressServiceClient
         }
     }
 
-    public async Task<ServiceResult<AddressDto>> UpdateAddress(UpdateAddressRequestDto dto)
+    public async Task<ServiceResult<AddressDto>> UpdateAddress(string addressId, UpdateAddressRequestDto dto)
     {
         try
         {
             var request = new UpdateAddressRequest
             {
-                AddressId = dto.AddressId
+                AddressId = addressId
             };
 
             if (!string.IsNullOrWhiteSpace(dto.Street)) request.Street = dto.Street;

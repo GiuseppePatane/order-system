@@ -1,4 +1,3 @@
-using ApiGateway.Core.Common;
 using ApiGateway.Core.User;
 using ApiGateway.Core.User.Dto;
 using Microsoft.AspNetCore.Mvc;
@@ -28,6 +27,7 @@ public class UsersController : Base
     /// <response code="200">Returns the user details</response>
     /// <response code="404">User not found</response>
     /// <response code="400">Invalid user ID format</response>
+    /// <response code="500">Internal server error</response>
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
@@ -53,6 +53,7 @@ public class UsersController : Base
     /// <param name="searchTerm">Optional search term for user name or email</param>
     /// <returns>A paginated list of users</returns>
     /// <response code="200">Returns the paginated user list</response>
+    /// <response code="500">Internal server error</response>
     [HttpGet("{pageNumber}/{pageSize}")]
     [ProducesResponseType(typeof(PagedUsersDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
@@ -83,6 +84,7 @@ public class UsersController : Base
     /// <returns>The created user</returns>
     /// <response code="201">User created successfully</response>
     /// <response code="400">Invalid user data or duplicate email</response>
+    /// <response code="500">Internal server error</response>
     [HttpPost]
     [ProducesResponseType(typeof(UserMutationResultDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -107,6 +109,7 @@ public class UsersController : Base
     /// <response code="200">User updated successfully</response>
     /// <response code="404">User not found</response>
     /// <response code="400">Invalid user data</response>
+    /// <response code="500">Internal server error</response>
     [HttpPut("{id}")]
     [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
@@ -131,6 +134,7 @@ public class UsersController : Base
     /// <returns>No content on success</returns>
     /// <response code="204">User deleted successfully</response>
     /// <response code="404">User not found</response>
+    /// <response code="500">Internal server error</response>
     [HttpDelete("{id}")]
     [ProducesResponseType(typeof(void), StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]

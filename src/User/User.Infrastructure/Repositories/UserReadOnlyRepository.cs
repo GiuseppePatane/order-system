@@ -4,7 +4,6 @@ using Shared.Core.Domain.Errors;
 using User.Core.Domain;
 using User.Core.Repositories;
 using User.Infrastructure.EF;
-using User.Infrastructure.EF.Configuration;
 
 namespace User.Infrastructure.Repositories;
 

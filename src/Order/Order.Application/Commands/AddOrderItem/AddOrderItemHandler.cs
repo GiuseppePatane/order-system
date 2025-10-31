@@ -20,7 +20,7 @@ public class AddOrderItemHandler
 
     public async Task<Result<AddOrderItemResult>> Handle(AddOrderItemCommand request, CancellationToken cancellationToken)
     {
-        // Get the existing order
+       
         var order = await _readRepository.GetByIdAsync(request.OrderId, cancellationToken);
         if (order == null)
         {
