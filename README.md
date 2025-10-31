@@ -125,11 +125,11 @@ L'API Gateway a sua volta comunica con i servizi tramite gRPC (HTTP/2).
 ### Testing
 - **xUnit** - Testing framework
 - **Testcontainers** - Integration test con DB reali
-- **FluentAssertions** - Assertion library
+- **Shouldly** - Assertion library
 
 ---
 
-## Come Usare il Sistema
+## Come Usare le api
 
 ### 1. Workflow Completo - Creazione Ordine
 
