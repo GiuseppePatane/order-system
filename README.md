@@ -1,9 +1,6 @@
 # Order System - Architecture
 
-
-
 Poc sistema di ordine prodotti basato su servizi con .NET 9 e .NET Aspire
-
 
 ---
 
@@ -30,7 +27,7 @@ dotnet run
 Eseguito il comando, Aspire avvierà:
 - 4 database PostgreSQL (uno per servizio)
 - 4 servizi gRPC: Product, User, Address, Order
--  4 Database Migrator per inizializzare gli schemi e seed dei dati iniziali. Giusto per non avere prodotti e categorie vuote all'inizio.
+- 4 Database Migrator per inizializzare gli schemi e seed dei dati iniziali. Giusto per non avere prodotti e categorie vuote all'inizio.
 - API Gateway REST con Swagger
 - Dashboard Aspire per observability
 
@@ -56,16 +53,9 @@ Per semplicita di testing nella cartella `http/` sono presenti file `.http` con 
 
 I file utilizzano il concetto di variabili globali per riutilizzare gli ID creati nei passaggi precedenti.
 
-
 In alternativa si possono eseguire le richieste utilizzando la Swagger UI all'indirizzo http://localhost:5046/swagger.
 
-
-
-
 ## Struttura del Progetto
-
-
-
 
 Ogni servizio segue questa struttura:
 
@@ -75,17 +65,10 @@ Ogni servizio segue questa struttura:
 * Service.GrpcService (Presentation Layer)
 * Service.Proto (Contract Layer)
 
-
-
-
-
-
 ## Architettura del Sistema
 
 Il client può comunicare con l'API Gateway tramite REST (HTTP/1.1).
 L'API Gateway a sua volta comunica con i servizi tramite gRPC (HTTP/2).
-
-
 
 
 ### Responsabilità dei Microservizi
@@ -105,7 +88,7 @@ L'API Gateway a sua volta comunica con i servizi tramite gRPC (HTTP/2).
 ### Core
 - **.NET 9.0** - Framework
 - **ASP.NET Core** - Web & gRPC hosting
-- **gRPC** - Comunicazione inter-service (HTTP/2, type-safe)
+- **gRPC** - Comunicazione interna tra gatewat e service (HTTP/2, type-safe)
 - **Entity Framework Core 9** - ORM
 - **PostgreSQL** - Database (uno per servizio)
 - **.NET Aspire** - Orchestrazione, Service Discovery, Resilience
@@ -200,7 +183,7 @@ Content-Type: application/json
   }
 }
 
-# Risposta: { "orderId": "...", "total": 1999.98, ... }
+# Risposta: { "orderId": "..."}
 ```
 
 #### Step 5: Gestisci l'Ordine
@@ -225,7 +208,7 @@ DELETE http://localhost:5046/api/orders/{orderId}/cancel
 Visita http://localhost:15066 per:
 - **Traces**: Visualizza richieste distribuite tra servizi
 - **Metrics**: Performance e latenze
-- **Logs**: Log strutturati con correlazione
+- **Logs**: Log strutturati con correlazione con traces
 - **Health**: Stato di salute di ogni servizio
 - **Resources**: Database, container Docker attivi
 
@@ -260,7 +243,7 @@ cd test/{Service}/Product.IntegrationTest
 dotnet test
 ```
 
-In alternativa potete eseguire tutti i test utilizzando Rider o Visual Studio.
+In alternativa potete eseguire tutti i test simultaneamente utilizzando Rider o Visual Studio,Visual Studio Code.
 
 ---
 
