@@ -20,7 +20,7 @@ Poc sistema di ordine prodotti basato su servizi con .NET 9 e .NET Aspire
 ```bash
 # Clone del repository
 git clone <repository-url>
-cd OrderSystem
+cd order-poc
 
 # Avvio con .NET Aspire (avvia tutto l'infrastruttura)
 cd OrderSystem.AppHost
